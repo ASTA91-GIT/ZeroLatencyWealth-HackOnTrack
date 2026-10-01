@@ -23,8 +23,10 @@ from backend.services.auth_service import (
 )
 from backend.services.portfolio_service import (
     get_user_portfolio_summary, get_user_holdings, get_asset_by_id,
-    get_all_assets, reset_demo_portfolio
+    get_all_assets, reset_demo_portfolio, get_portfolio_analytics,
+    get_portfolio_performance_history
 )
+from backend.services.portfolio_impact_service import calculate_portfolio_impact
 from backend.market_data import get_market_data_provider
 from backend.market_data.websocket_manager import ws_manager
 from backend.market_data.streamer import market_streamer
@@ -517,6 +519,36 @@ def reset_portfolio(current_user: UserProfile = Depends(get_current_authenticate
     if not current_user.is_demo and current_user.id != "demo-user-001":
         raise HTTPException(status_code=400, detail="Portfolio reset is only allowed on Demo mode accounts.")
     return reset_demo_portfolio()
+
+@app.get("/api/portfolio/impact")
+async def get_portfolio_impact_endpoint(current_user: UserProfile = Depends(get_current_authenticated_user)):
+    """Calculate exact INR contribution of market movements on user holdings and return grounded insights."""
+    return await calculate_portfolio_impact(user_id=current_user.id)
+
+@app.get("/api/portfolio/analytics")
+def get_portfolio_analytics_endpoint(current_user: UserProfile = Depends(get_current_authenticated_user)):
+    """Retrieve cross-asset exposure, concentration metrics, risk metrics, and correlation matrix."""
+    return get_portfolio_analytics(user_id=current_user.id)
+
+@app.get("/api/portfolio/performance")
+def get_portfolio_performance_endpoint(
+    timeframe: str = "ALL",
+    current_user: UserProfile = Depends(get_current_authenticated_user)
+):
+    """Retrieve genuine historical portfolio snapshots and benchmark comparison."""
+    return get_portfolio_performance_history(user_id=current_user.id, timeframe=timeframe)
+
+@app.get("/api/portfolio/news")
+async def get_portfolio_news_endpoint(current_user: UserProfile = Depends(get_current_authenticated_user)):
+    """Retrieve verified market news matching user holdings."""
+    holdings = get_user_holdings(user_id=current_user.id)
+    provider = get_market_data_provider()
+    all_news = await provider.get_news()
+    if not holdings:
+        return all_news[:6]
+    symbols = {h.symbol.upper() for h in holdings}
+    relevant = [n for n in all_news if any(s in symbols for s in (n.related_symbols or [])) or any(s in n.headline.upper() for s in symbols)]
+    return relevant if relevant else all_news[:6]
 
 # ----------------- PORTFOLIO INSIGHTS (User Isolated) -----------------
 

@@ -206,6 +206,38 @@ def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Opt
             "source": "ZeroLatency Copilot"
         }
 
+    # 3.5. Portfolio Impact & Daily Movement Questions (Requirement #10, #17)
+    if any(k in q for k in ["why did my portfolio", "affecting my wealth", "portfolio move", "portfolio fall", "portfolio drop", "portfolio gain", "holding contribute", "contributed most"]):
+        if not holdings:
+            return {
+                "reply": "Your portfolio has no active holdings recorded yet. Once you add or import your investments, I will analyze the exact contribution of each asset to your daily P&L and connect it to market events.",
+                "suggested_questions": ["Explore Markets", "What is a REIT?", "How does asset allocation work?"],
+                "source": "ZeroLatency Copilot"
+            }
+        top_gainers = sorted(holdings, key=lambda x: getattr(x, 'day_change_percent', 0.0), reverse=True)
+        top_gain = top_gainers[0] if top_gainers else None
+        top_loss = top_gainers[-1] if top_gainers else None
+
+        lines = [
+            "### 📈 WHAT'S AFFECTING YOUR WEALTH TODAY\n",
+            f"- **Total Wealth**: ₹{summary.total_value:,.2f}",
+            f"- **Today's P&L Movement**: ₹{summary.day_change_amount:+,.2f} ({summary.day_change_percent:+.2f}%)\n",
+            "#### Key Movement Drivers:"
+        ]
+        if top_gain and getattr(top_gain, 'day_change_percent', 0.0) != 0:
+            lines.append(f"- **Top Positive Contributor**: **{top_gain.symbol}** ({top_gain.day_change_percent:+.2f}%) contributing approx ₹{top_gain.day_change:+,.2f}.")
+        if top_loss and top_loss.symbol != (top_gain.symbol if top_gain else "") and getattr(top_loss, 'day_change_percent', 0.0) != 0:
+            lines.append(f"- **Top Volatility / Drag**: **{top_loss.symbol}** ({top_loss.day_change_percent:+.2f}%) impact approx ₹{top_loss.day_change:+,.2f}.")
+        
+        lines.append("\n#### Multi-Asset Diversification Context:")
+        lines.append("Your defensive assets (Sovereign Bonds, commercial REITs, and InvITs) provide yield stability to balance equity market volatility.")
+
+        return {
+            "reply": "\n".join(lines),
+            "suggested_questions": ["Show my portfolio allocation", "What is affecting my REIT holdings?", "Explain NIFTY 50 impact", "How to reduce portfolio risk?"],
+            "source": "ZeroLatency Copilot (Portfolio Impact Engine)"
+        }
+
     # 4. Portfolio questions
     if any(k in q for k in ["my portfolio", "allocation", "holdings", "how much", "breakdown", "value", "largest holding"]):
         if "largest holding" in q:

@@ -49,15 +49,13 @@ export const Navbar: React.FC = () => {
   ];
 
   const authLinks: { view: ViewType; label: string; icon: React.ReactNode }[] = [
-    { view: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
-    { view: 'markets', label: 'Markets', icon: <Compass className="w-3.5 h-3.5" /> },
-    { view: 'screener', label: 'Screener', icon: <SlidersHorizontal className="w-3.5 h-3.5" /> },
-    { view: 'options', label: 'Options', icon: <Layers className="w-3.5 h-3.5" /> },
-    { view: 'calendar', label: 'Calendar', icon: <Calendar className="w-3.5 h-3.5" /> },
-    { view: 'watchlist', label: 'Watchlist', icon: <Bookmark className="w-3.5 h-3.5" /> },
-    { view: 'papertrading', label: 'Paper Trading', icon: <Coins className="w-3.5 h-3.5" /> },
-    { view: 'portfolio', label: 'Holdings', icon: <Layers className="w-3.5 h-3.5" /> },
-    { view: 'insights', label: 'AI Insights', icon: <LineChart className="w-3.5 h-3.5" /> },
+    { view: 'dashboard', label: 'WEALTH OS', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
+    { view: 'markets', label: 'MARKETS', icon: <Compass className="w-3.5 h-3.5" /> },
+    { view: 'watchlist', label: 'WATCHLIST', icon: <Bookmark className="w-3.5 h-3.5" /> },
+    { view: 'screener', label: 'SCREENER', icon: <SlidersHorizontal className="w-3.5 h-3.5" /> },
+    { view: 'options', label: 'OPTIONS', icon: <Layers className="w-3.5 h-3.5" /> },
+    { view: 'calendar', label: 'CALENDAR', icon: <Calendar className="w-3.5 h-3.5" /> },
+    { view: 'learning', label: 'LEARN', icon: <GraduationCap className="w-3.5 h-3.5" /> },
   ];
 
   const navLinks = isAuthenticated ? authLinks : publicLinks;

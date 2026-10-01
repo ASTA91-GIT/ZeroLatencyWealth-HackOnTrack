@@ -67,3 +67,4 @@ class MarketDataCache:
         self._store.clear()
 
 cache = MarketDataCache()
+market_cache = cache

@@ -285,6 +285,22 @@ class ApiClient {
     return this.request<PortfolioInsightsResponse>('/insights');
   }
 
+  async getPortfolioImpact(): Promise<any> {
+    return this.request('/portfolio/impact');
+  }
+
+  async getPortfolioAnalytics(): Promise<any> {
+    return this.request('/portfolio/analytics');
+  }
+
+  async getPortfolioPerformance(timeframe: string = 'ALL'): Promise<any> {
+    return this.request(`/portfolio/performance?timeframe=${timeframe}`);
+  }
+
+  async getPortfolioNews(): Promise<MarketNews[]> {
+    return this.request<MarketNews[]>('/portfolio/news');
+  }
+
   async getGoals(): Promise<GoalModel[]> {
     return this.request<GoalModel[]>('/goals');
   }

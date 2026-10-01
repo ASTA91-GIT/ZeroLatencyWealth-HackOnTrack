@@ -55,17 +55,18 @@ export const LandingPage: React.FC = () => {
               <span>THE ZERO LATENCY WEALTH OPERATING SYSTEM</span>
             </div>
 
-            {/* Main Headline */}
+            {/* Main Headline (Requirement #28) */}
             <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-[1.08] text-zinc-900 dark:text-white">
-              Smarter Wealth.{' '}
+              ONE PORTFOLIO.{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-500 dark:from-purple-400 dark:via-violet-400 dark:to-indigo-300">
-                Zero Friction.
-              </span>
+                EVERY ASSET.
+              </span>{' '}
+              CLEARER UNDERSTANDING.
             </h1>
 
-            {/* Subheading */}
+            {/* Subheading (Requirement #28) */}
             <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-xl">
-              Unify equities, sovereign bonds, commercial REITs, and infrastructure InvITs into one real-time financial command center powered by private local AI.
+              Track, understand and paper-trade your wealth across equities, bonds, REITs, InvITs, ETFs, commodities and other supported assets — with real market data and contextual financial intelligence.
             </p>
 
             {/* Primary Four CTAs (Requirement #1 & #41) */}

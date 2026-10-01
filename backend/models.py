@@ -102,6 +102,8 @@ class HoldingModel(BaseModel):
     allocation_percent: float
     annual_yield: float = 0.0
     risk_level: Optional[str] = None
+    day_change: float = 0.0
+    day_change_percent: float = 0.0
 
 class AllocationBreakdown(BaseModel):
     asset_type: str
