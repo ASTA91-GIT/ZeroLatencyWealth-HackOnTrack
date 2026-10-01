@@ -116,32 +116,15 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
 
-          {/* Theme Selector */}
+          {/* Theme Indicator (Permanently Dark Mode - Requirement #60) */}
           <div className="p-4 rounded-xl bg-surface-2 border border-theme space-y-2.5">
-            <span className="text-xs font-semibold text-theme block">Theme Mode</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => theme === 'light' && toggleTheme()}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                  theme === 'dark'
-                    ? 'bg-purple-500/15 text-purple-400 border border-purple-500/40 shadow-sm'
-                    : 'bg-surface border border-theme text-muted-theme hover:text-theme'
-                }`}
-              >
-                <Moon className="w-3.5 h-3.5" />
-                <span>Dark Theme</span>
-              </button>
-              <button
-                onClick={() => theme === 'dark' && toggleTheme()}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                  theme === 'light'
-                    ? 'bg-purple-500/15 text-purple-400 border border-purple-500/40 shadow-sm'
-                    : 'bg-surface border border-theme text-muted-theme hover:text-theme'
-                }`}
-              >
-                <Sun className="w-3.5 h-3.5" />
-                <span>Light Theme</span>
-              </button>
+            <span className="text-xs font-semibold text-theme block">Theme Architecture</span>
+            <div className="p-2.5 rounded-xl bg-[#09090b] border border-violet-500/30 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2 text-violet-400 font-bold">
+                <Moon className="w-4 h-4" />
+                <span>ZeroLatency Dark Terminal</span>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-500">PERMANENT</span>
             </div>
           </div>
         </div>

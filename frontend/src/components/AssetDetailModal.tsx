@@ -43,7 +43,8 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ asset, onClo
     : 0.0;
   const isProfit = holding ? holding.unrealized_pl >= 0 : change24h >= 0;
 
-  const watchlisted = isWatchlisted(asset.id) || isWatchlisted(asset.symbol);
+  const assetId = asset.id || asset.symbol || '';
+  const watchlisted = isWatchlisted(assetId);
 
   const handleAskCopilot = () => {
     setSelectedAsset(asset as any);
@@ -89,8 +90,8 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ asset, onClo
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">{asset.name}</h3>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getBadgeColor(asset.asset_type)}`}>
-                  {asset.asset_type}
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${getBadgeColor(asset.asset_type || 'EQUITY')}`}>
+                  {asset.asset_type || 'EQUITY'}
                 </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
@@ -101,7 +102,7 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ asset, onClo
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => toggleWatchlist(asset.id)}
+              onClick={() => toggleWatchlist(assetId)}
               className={`p-2 rounded-xl border transition-all cursor-pointer ${
                 watchlisted
                   ? 'bg-purple-600 text-white border-purple-600'

@@ -299,29 +299,87 @@
 ---
 
 ## 15. Settings & Profile Flow (`views/SettingsView.tsx`)
-- **Investor Profile:** Displays display name (`Alex Mercer`), email (`demo@zerolatency.invest`), and demo badge.
+- **Investor Profile:** Displays display name, email, and authentication status.
 - **Display Preferences:**
-  - Currency switch: `₹ INR` vs `$ USD` (simulated rate conversion).
-  - Theme mode toggle: `Dark Theme` vs `Light Theme`.
+  - Currency switch: `₹ INR` vs `$ USD` (live conversion rates).
+  - Theme mode: Permanently locked to Dark Mode (`#09090B`) matching high-end institutional terminal standards.
 - **JSON Export:** Download full portfolio snapshot as `zerolatency_portfolio_export.json`.
-- **Canonical Reset Button:** Calls `POST /api/portfolio/reset`, resetting all newly imported holdings back to the canonical ₹8,42,500 benchmark.
+- **Benchmark Reset Button:** Calls `POST /api/portfolio/reset`, resetting portfolio holdings back to canonical benchmark state.
 
 ---
 
-## 16. Theme Flow
-- Toggling theme via the Navbar Sun/Moon icon or Settings switches `theme` between `'dark'` and `'light'`.
-- Immediately toggles `.dark` class on `document.documentElement` and stores preference in `localStorage`.
-- All cards, borders, typography, tables, and Recharts charts adapt without reloading or flashing.
+## 16. Permanent Dark Theme Terminal Flow
+- ZeroLatency Wealth operates exclusively in **Permanent Dark Mode** (`#09090B` deep black, `#18181B` zinc cards, electric violet and emerald accents).
+- High-contrast financial terminal design optimized for prolonged trading desk sessions.
+- No light mode toggle or flash of unstyled content; `.dark` is permanently locked on `document.documentElement`.
 
 ---
 
-## 17. Error & Exception Flow
-- **Network / API Failures:** Handled inside `api.ts` with error toasts (`"Failed to fetch portfolio summary"`, `"Failed to communicate with Copilot"`).
-- **Form Validation:** Input requirements (positive numbers, valid emails, non-empty goal titles) prevent invalid requests before submission.
-- **Invalid CSV Files:** Missing columns or corrupt formatting return explicit error banners explaining the expected CSV headers.
+## 17. Live Market Intelligence Terminal Flow (`/markets`)
+- **Real-Time Ticker Tape:**
+  - Dynamic ticker ribbon streaming live ticks for NIFTY 50, SENSEX, BANK NIFTY, NIFTY IT, global indices, commodities (Gold, Silver, Crude), and currencies (USD/INR).
+  - Sub-second WebSocket ticks with localized micro-animations indicating positive (+green) or negative (-red) price deltas without flashing full cards.
+- **NSE/BSE Exchange Session Engine:**
+  - Evaluates Indian Standard Time (IST) 09:15–15:30 against market holiday calendar.
+  - Dynamically displays: `OPEN` (emerald), `CLOSED` (zinc), `PRE-MARKET`, or `POST-MARKET` with live exchange timestamps.
+- **Global Asset Search:**
+  - Fast search across the instrument master database for equities, indices, ETFs, commodities, and currencies.
+  - Selecting any instrument routes to `/markets/{symbol}` for comprehensive deep-dive.
 
 ---
 
-## 18. Logout / Reset Flow
-- Clicking **"Reset Demo Data"** restores the database to its pristine benchmark state.
-- Switching to custom accounts clears the demo token from memory and redirects to the sign-in screen.
+## 18. Instrument Detail & Advanced Charting Desk (`/markets/{symbol}`)
+- **TradingView Lightweight Charts v5:**
+  - High-performance financial charts supporting Candlestick, Line, Area, and Bar series.
+  - Timeframe intervals: `1m`, `5m`, `15m`, `1h`, `1D`, `1W`, `1M`.
+  - Volume panel histogram synchronized with price candles.
+  - Technical indicator overlays: SMA 20, EMA 50, RSI, MACD, and Bollinger Bands calculated strictly on real historical candles.
+  - Real-time incremental candle updates: live WebSocket ticks update active candle High, Low, Close, and Volume incrementally without reloading chart history.
+- **Real Company Fundamentals & Financial Statements:**
+  - P/E ratio, P/B ratio, EPS, Market Cap, 52-week High/Low, Dividend Yield, ROE, ROCE, and Operating Margins.
+  - Income Statement, Balance Sheet, and Cash Flow metrics pulled from verified exchange filings.
+- **Market Depth (Level 2 Order Book):**
+  - Displays Best 5 Bids and Asks where licensed exchange depth is available.
+  - For unlisted/delayed feeds, displays an explicit, transparent disclaimer: *"Market depth unavailable for this instrument"* rather than fabricating fake order books.
+- **Live Market News:**
+  - Legitimate news items with headlines, publisher timestamps, and related ticker tags.
+
+---
+
+## 19. Market Screener & Heatmap Desk (`/screener`)
+- **Multi-Asset Screener:**
+  - Real-time filtering across Equities, Commodities, Currencies, REITs, and InvITs by Price, % Change, Volume, Market Cap, and P/E.
+- **Table & Heatmap Views:**
+  - High-density tabular view with sorting and instant paper trading triggers.
+  - Interactive Market Heatmap where tile sizes reflect relative market capitalization and color intensity reflects real percentage change.
+
+---
+
+## 20. Options Chain & Derivatives Desk (`/options`)
+- **Option Chain Display:**
+  - Structured view of Strike prices flanked by Calls (LTP, Change, OI, Volume, IV) and Puts.
+  - Atmospheric ATM (At-The-Money) highlight.
+- **Zero Fake Data Policy:**
+  - Transparently identifies regulatory and licensing status. Unlicensed derivatives feeds display clear "Data unavailable" disclaimers without simulated numbers.
+
+---
+
+## 21. Real-Price Paper Trading Desk (`/watchlist` & `/portfolio`)
+- **Real Market Execution:**
+  - Virtual trading capital (₹10,00,000) executes orders strictly against real-time exchange market prices.
+  - Support for Market Orders and Limit Orders with deterministic simulation matching rules.
+- **Real-Time Dynamic P&L:**
+  - Portfolio unrealized P&L recalculates dynamically as live market quotes arrive over WebSockets.
+  - Centralized price subscription hub prevents redundant component polling.
+
+---
+
+## 22. AI Copilot with Real Market Context
+- ZeroLatency Copilot automatically ingests current market snapshots (NIFTY, Sensex, commodities, top movers) to deliver factual, grounded responses.
+- When live feeds are unavailable, Copilot explicitly states data availability limits rather than speculating or hallucinating numbers.
+
+---
+
+## 23. Connection Resilience & Stale Data Detection
+- **WebSocket Reconnection:** Automatic exponential backoff reconnection (`CONNECTING` $\rightarrow$ `CONNECTED` $\rightarrow$ `RECONNECTING` $\rightarrow$ `DISCONNECTED`).
+- **Data Freshness Indicators:** Every live quote displays its actual exchange timestamp and freshness indicator (`LIVE`, `DELAYED`, or `DATA UNAVAILABLE`).

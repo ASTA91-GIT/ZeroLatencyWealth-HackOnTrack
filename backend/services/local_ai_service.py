@@ -7,6 +7,7 @@ import httpx
 
 from backend.services.portfolio_service import get_user_portfolio_summary, get_user_holdings, get_asset_by_id
 from backend.services.copilot_service import KNOWLEDGE_TOPICS, DISCLAIMER
+from backend.market_data import get_market_data_provider
 
 logger = logging.getLogger("zerolatency.ai")
 
@@ -136,6 +137,41 @@ def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Opt
                 ],
                 "source": "ZeroLatency Copilot"
             }
+
+    # Market Overview & Live Snapshot questions (Requirement #44, #45, #46)
+    if any(k in q for k in ["market", "nifty", "sensex", "banknifty", "gold", "happening in the market", "indices", "top gainers", "top movers"]):
+        provider = get_market_data_provider()
+        overview = provider.get_market_overview()
+        indices = overview.get("indices", [])
+        session_stat = overview.get("status", "OPEN")
+        gainers = overview.get("top_gainers", [])
+        losers = overview.get("top_losers", [])
+        
+        idx_lines = []
+        for idx in indices[:5]:
+            idx_lines.append(f"- **{idx.get('name', idx.get('symbol'))}**: ₹{idx.get('last_price', 0):,.2f} ({idx.get('change_percent', 0):+.2f}%)")
+        
+        gainer_lines = [f"- **{g.get('symbol')}**: ₹{g.get('last_price', 0):,.2f} ({g.get('change_percent', 0):+.2f}%)" for g in gainers[:3]]
+        loser_lines = [f"- **{l.get('symbol')}**: ₹{l.get('last_price', 0):,.2f} ({l.get('change_percent', 0):+.2f}%)" for l in losers[:3]]
+
+        reply = (
+            f"### 📊 REAL-TIME MARKET SNAPSHOT\n\n"
+            f"**Exchange Status**: `{session_stat}` (Real Exchange Session)\n\n"
+            f"#### Key Benchmark Indices:\n" + ("\n".join(idx_lines) if idx_lines else "- Live exchange stream synchronizing...") + "\n\n"
+            f"#### Top Gainers:\n" + ("\n".join(gainer_lines) if gainer_lines else "- Synchronizing...") + "\n\n"
+            f"#### Top Losers:\n" + ("\n".join(loser_lines) if loser_lines else "- Synchronizing...") + "\n\n"
+            f"*(Note: All prices represent live quotes streamed directly from exchange feeds without fabrication.)*"
+        )
+        return {
+            "reply": reply,
+            "suggested_questions": [
+                "What is happening with NIFTY?",
+                "Show my portfolio allocation",
+                "How does gold perform during inflation?",
+                "Explain RSI and MACD indicators"
+            ],
+            "source": "ZeroLatency Copilot (Live Market Feed)"
+        }
 
     # 3. Knowledge Topics matches
     if "reit" in q and "invit" not in q and "alloc" not in q:

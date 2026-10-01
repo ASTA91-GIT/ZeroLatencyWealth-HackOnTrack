@@ -14,6 +14,10 @@ import { api } from '../services/api';
 export type ViewType =
   | 'landing'
   | 'markets'
+  | 'screener'
+  | 'options'
+  | 'calendar'
+  | 'instrument-detail'
   | 'dashboard'
   | 'portfolio'
   | 'explorer'
@@ -33,7 +37,7 @@ export type ViewType =
   | 'reset-password'
   | 'verify-email';
 
-export type ThemeType = 'dark' | 'light';
+export type ThemeType = 'dark';
 
 interface ToastInfo {
   id: string;
@@ -79,6 +83,8 @@ interface AppContextType {
   paperTradeModalAsset: AssetModel | HoldingModel | MarketQuote | null;
   openPaperTradeModal: (asset: AssetModel | HoldingModel | MarketQuote) => void;
   closePaperTradeModal: () => void;
+  selectedMarketSymbol: string | null;
+  setSelectedMarketSymbol: (sym: string | null) => void;
   theme: ThemeType;
   toggleTheme: () => void;
   setTheme: (theme: ThemeType) => void;
@@ -97,6 +103,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loading, setLoading] = useState<boolean>(true);
   const [toasts, setToasts] = useState<ToastInfo[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<HoldingModel | null>(null);
+  const [selectedMarketSymbol, setSelectedMarketSymbol] = useState<string | null>(null);
   const [isCopilotDrawerOpen, setIsCopilotDrawerOpen] = useState<boolean>(false);
 
   // Gatekeeping Auth Prompt Modal
@@ -106,32 +113,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Paper Trade Modal State
   const [paperTradeModalAsset, setPaperTradeModalAsset] = useState<AssetModel | HoldingModel | MarketQuote | null>(null);
 
-  // Theme Management
-  const [theme, setThemeState] = useState<ThemeType>(() => {
-    const saved = localStorage.getItem('zl_theme') as ThemeType;
-    if (saved === 'dark' || saved === 'light') return saved;
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
-      ? 'light'
-      : 'dark';
-  });
+  // Permanently Dark Theme (Requirement #60)
+  const theme: ThemeType = 'dark';
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    localStorage.setItem('zl_theme', theme);
-  }, [theme]);
+    root.classList.add('dark');
+    root.classList.remove('light');
+    localStorage.setItem('zl_theme', 'dark');
+  }, []);
 
-  const setTheme = (newTheme: ThemeType) => {
-    setThemeState(newTheme);
-  };
-
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const setTheme = () => {};
+  const toggleTheme = () => {};
 
   const showToast = (message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -372,6 +365,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         paperTradeModalAsset,
         openPaperTradeModal,
         closePaperTradeModal,
+        selectedMarketSymbol,
+        setSelectedMarketSymbol,
         theme,
         toggleTheme,
         setTheme,

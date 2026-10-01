@@ -45,7 +45,7 @@ def test_public_markets_explorer_without_auth():
     assert len(quotes) > 0
     first_q = quotes[0]
     assert "symbol" in first_q
-    assert "price" in first_q
+    assert "last_price" in first_q or "price" in first_q
     assert "asset_type" in first_q
 
     # 3. Filter by category

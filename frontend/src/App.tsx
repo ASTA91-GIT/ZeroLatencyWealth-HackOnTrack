@@ -22,6 +22,10 @@ import { SecurityPrivacyView } from './views/SecurityPrivacyView';
 import { ArchitectureView } from './views/ArchitectureView';
 import { SettingsView } from './views/SettingsView';
 import { AuthView } from './views/AuthView';
+import { ScreenerView } from './views/ScreenerView';
+import { OptionsView } from './views/OptionsView';
+import { EconomicCalendarView } from './views/EconomicCalendarView';
+import { InstrumentDetailView } from './views/InstrumentDetailView';
 
 import { Sparkles } from 'lucide-react';
 
@@ -44,6 +48,14 @@ export const MainApp: React.FC = () => {
         return <LandingPage />;
       case 'markets':
         return <MarketsView />;
+      case 'screener':
+        return <ScreenerView />;
+      case 'options':
+        return <OptionsView />;
+      case 'calendar':
+        return <EconomicCalendarView />;
+      case 'instrument-detail':
+        return <InstrumentDetailView />;
       case 'dashboard':
         return <DashboardView />;
       case 'portfolio':

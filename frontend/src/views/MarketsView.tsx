@@ -1,57 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../services/api';
-import type { MarketOverview, MarketQuote, AssetType } from '../types';
+import { marketWS } from '../services/marketWebSocket';
+import { MarketOverview, MarketQuote, MarketBreadthData } from '../types';
+import { MarketTickerTape } from '../components/trading/MarketTickerTape';
 import {
   TrendingUp,
   TrendingDown,
   Search,
-  SlidersHorizontal,
   Bookmark,
   Coins,
   Sparkles,
-  Info,
+  BarChart2,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
-  ShieldCheck,
-  Building2,
   RefreshCw,
+  Building,
   Layers,
-  ChevronRight
+  Activity,
+  Globe,
+  DollarSign
 } from 'lucide-react';
 
 export const MarketsView: React.FC = () => {
   const {
-    openAssetModal,
     openPaperTradeModal,
     toggleWatchlist,
     isWatchlisted,
     setIsCopilotDrawerOpen,
     setSelectedAsset,
-    requireAuth,
-    setCurrentView
+    setSelectedMarketSymbol,
+    setCurrentView,
   } = useApp();
 
-  const [overview, setOverview] = useState<MarketOverview | null>(null);
   const [quotes, setQuotes] = useState<MarketQuote[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [breadth, setBreadth] = useState<MarketBreadthData | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('EQUITY');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  const categories = [
+    { id: 'EQUITY', label: 'Indian Equities' },
+    { id: 'INDEX', label: 'Benchmark Indices' },
+    { id: 'COMMODITY', label: 'Commodities (Gold/Silver/Crude)' },
+    { id: 'CURRENCY', label: 'Currencies (USD/EUR/INR)' },
+    { id: 'REIT', label: 'Commercial REITs' },
+    { id: 'INVIT', label: 'Infrastructure InvITs' },
+  ];
+
   const fetchMarketData = async () => {
     try {
       setRefreshing(true);
-      const [ovData, qData] = await Promise.all([
-        api.getMarketOverview(),
+      const [quotesData, breadthData] = await Promise.all([
         api.getMarketQuotes({
           asset_type: selectedCategory !== 'ALL' ? selectedCategory : undefined,
-          search: searchQuery.trim() || undefined
-        })
+          search: searchQuery.trim() || undefined,
+        }),
+        api.getBreadth().catch(() => null),
       ]);
-      setOverview(ovData);
-      setQuotes(qData);
+
+      setQuotes(quotesData);
+      if (breadthData) setBreadth(breadthData);
     } catch (err) {
       console.error('Failed to load market data', err);
     } finally {
@@ -64,13 +75,28 @@ export const MarketsView: React.FC = () => {
     fetchMarketData();
   }, [selectedCategory, searchQuery]);
 
-  const categories = [
-    { id: 'ALL', label: 'All Instruments' },
-    { id: 'EQUITY', label: 'Equities & ETFs' },
-    { id: 'BOND', label: 'Sovereign & Debt Bonds' },
-    { id: 'REIT', label: 'Commercial REITs' },
-    { id: 'INVIT', label: 'Infrastructure InvITs' },
-  ];
+  // Subscribe to live WebSocket quotes for currently displayed symbols
+  useEffect(() => {
+    if (quotes.length === 0) return;
+    const symbols = quotes.map((q) => q.symbol);
+    marketWS.subscribe(symbols);
+
+    const unsubTick = marketWS.onTick((tickQuote) => {
+      setQuotes((prev) =>
+        prev.map((item) => (item.symbol.toUpperCase() === tickQuote.symbol.toUpperCase() ? { ...item, ...tickQuote } : item))
+      );
+    });
+
+    return () => {
+      unsubTick();
+      marketWS.unsubscribe(symbols);
+    };
+  }, [quotes]);
+
+  const handleOpenDetail = (sym: string) => {
+    setSelectedMarketSymbol(sym);
+    setCurrentView('instrument-detail');
+  };
 
   const handleAiExplain = (quote: MarketQuote) => {
     setSelectedAsset(quote as any);
@@ -78,95 +104,56 @@ export const MarketsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-20 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
-      {/* 1. TOP HEADER & MARKET STATUS */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/10 pb-6">
+    <div className="space-y-6 pb-20 text-zinc-100">
+      {/* 1. REAL-TIME TICKER TAPE BAR (Indian Indices, Global Indices, Commodities, Currencies) */}
+      <MarketTickerTape />
+
+      {/* 2. HEADER & MARKET BREADTH */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-[#27272A] pb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono font-bold tracking-widest text-purple-600 dark:text-purple-400 uppercase">
-              PUBLIC MARKET EXPLORER
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="flex items-center space-x-2 text-xs font-mono font-bold text-violet-400 uppercase tracking-wider mb-1">
+            <span>UNIFIED FINANCIAL MARKET TERMINAL</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900 dark:text-white">
-            Live Multi-Asset Quotes & Discovery
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Real-Time Market Intelligence
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1 max-w-2xl">
-            Explore equities, sovereign debt, commercial REITs, and infrastructure InvITs normalized under one unified valuation engine.
+          <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
+            Stream live equity valuations, sovereign gold, currencies, and real estate investment trusts directly from verified exchange market feeds.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 text-xs font-mono">
-            <Clock className="w-3.5 h-3.5 text-purple-500" />
-            <span className="text-zinc-500 dark:text-zinc-400">Market:</span>
-            <span className="font-bold text-zinc-900 dark:text-white">
-              {overview?.market_status || 'LIVE'}
-            </span>
+        {/* Market Breadth Card (Requirement #35) */}
+        {breadth && (
+          <div className="flex items-center space-x-4 p-3 bg-[#121214] border border-[#27272A] rounded-xl text-xs font-mono">
+            <div className="text-center pr-3 border-r border-zinc-800">
+              <span className="text-[10px] text-zinc-500 uppercase block">Advancers</span>
+              <strong className="text-emerald-400 text-sm font-bold">{breadth.advances}</strong>
+            </div>
+            <div className="text-center pr-3 border-r border-zinc-800">
+              <span className="text-[10px] text-zinc-500 uppercase block">Decliners</span>
+              <strong className="text-red-400 text-sm font-bold">{breadth.declines}</strong>
+            </div>
+            <div className="text-center">
+              <span className="text-[10px] text-zinc-500 uppercase block">Unchanged</span>
+              <strong className="text-zinc-400 text-sm font-bold">{breadth.unchanged}</strong>
+            </div>
           </div>
-
-          <button
-            onClick={fetchMarketData}
-            disabled={refreshing}
-            className="p-2 rounded-xl border border-zinc-200 dark:border-white/10 hover:border-purple-400 text-zinc-600 dark:text-zinc-300 hover:text-purple-600 transition-all cursor-pointer"
-            title="Refresh market data"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-purple-500' : ''}`} />
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* 2. MARKET BENCHMARK INDICES BAR */}
-      {overview && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {overview.indices.map((idx) => {
-            const isUp = idx.change >= 0;
-            return (
-              <div
-                key={idx.symbol}
-                className="p-4 rounded-2xl bg-zinc-50 dark:bg-[#121118] border border-zinc-200 dark:border-white/[0.08] hover:border-purple-500/40 transition-all shadow-sm"
-              >
-                <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                  <span className="font-bold tracking-tight text-zinc-900 dark:text-white truncate">
-                    {idx.name}
-                  </span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200/60 dark:bg-white/10">
-                    {idx.symbol}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="text-lg font-black font-mono text-zinc-900 dark:text-white">
-                    {idx.symbol.includes('YIELD') || idx.symbol.includes('10Y')
-                      ? `${idx.value.toFixed(2)}%`
-                      : idx.value.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </span>
-                  <span
-                    className={`flex items-center gap-0.5 text-xs font-mono font-bold ${
-                      isUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                    }`}
-                  >
-                    {isUp ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
-                    <span>{idx.change_percent > 0 ? `+${idx.change_percent}%` : `${idx.change_percent}%`}</span>
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 3. SEARCH & CATEGORY SELECTOR */}
+      {/* 3. SEARCH & CATEGORIES */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center space-x-2 overflow-x-auto pb-1 no-scrollbar text-xs">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === cat.id
-                  ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.35)]'
-                  : 'bg-zinc-100 dark:bg-white/[0.04] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-white/10'
+                  ? 'bg-violet-600 text-white font-bold shadow-lg shadow-violet-900/40'
+                  : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700'
               }`}
             >
               {cat.label}
@@ -174,73 +161,75 @@ export const MarketsView: React.FC = () => {
           ))}
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        {/* Real Symbol Search */}
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by symbol, name, or sector..."
+            placeholder="Search RELIANCE, NIFTY, GOLD, USDINR..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/10 focus:border-purple-500 rounded-xl pl-9 pr-4 py-2 text-xs text-zinc-900 dark:text-white focus:outline-none transition-all placeholder:text-zinc-400"
+            className="w-full bg-[#121214] border border-[#27272A] focus:border-violet-500 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none transition-all"
           />
         </div>
       </div>
 
-      {/* 4. NORMALIZED ASSET CARDS GRID */}
+      {/* 4. REAL QUOTE CARDS GRID */}
       {loading ? (
         <div className="py-20 text-center space-y-3">
-          <div className="w-8 h-8 rounded-full border-2 border-purple-500 border-t-transparent animate-spin mx-auto" />
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">Syncing market quotes...</p>
+          <div className="w-8 h-8 rounded-full border-2 border-violet-500 border-t-transparent animate-spin mx-auto" />
+          <p className="text-xs text-zinc-500 font-mono tracking-wide">STREAMING REAL EXCHANGE QUOTES...</p>
         </div>
       ) : quotes.length === 0 ? (
-        <div className="py-16 text-center rounded-3xl border border-zinc-200 dark:border-white/10 bg-zinc-50/50 dark:bg-white/[0.01] p-8 space-y-3">
-          <Building2 className="w-10 h-10 text-zinc-400 mx-auto" />
-          <h3 className="text-base font-bold">No assets found matching your criteria</h3>
-          <p className="text-xs text-zinc-500">Try modifying your search term or selecting another asset class.</p>
+        <div className="py-16 text-center rounded-3xl border border-[#27272A] bg-[#121214] p-8 space-y-3">
+          <Building className="w-10 h-10 text-zinc-600 mx-auto" />
+          <h3 className="text-base font-bold text-zinc-300">No instruments found matching your search</h3>
+          <p className="text-xs text-zinc-500">Please try another symbol or category.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {quotes.map((quote) => {
-            const isProfit = quote.change_24h >= 0;
-            const watchlisted = isWatchlisted(quote.id) || isWatchlisted(quote.symbol);
-
-            const badgeStyles = {
-              EQUITY: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-500/30',
-              BOND: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
-              REIT: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-500/30',
-              INVIT: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
-              OTHER: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700'
-            }[quote.asset_type] || 'bg-zinc-100 text-zinc-700';
+            const price = quote.last_price || (quote as any).price || 0;
+            const change = quote.change || 0;
+            const changePct = quote.change_percent || (quote as any).change_24h || 0;
+            const isUp = change >= 0;
+            const watchlisted = isWatchlisted(quote.symbol) || (quote.id ? isWatchlisted(quote.id) : false);
 
             return (
               <div
-                key={quote.id}
-                className="group p-5 rounded-2xl bg-white dark:bg-[#121118] border border-zinc-200 dark:border-white/[0.08] hover:border-purple-500/50 transition-all shadow-sm hover:shadow-[0_0_25px_rgba(168,85,247,0.12)] flex flex-col justify-between"
+                key={quote.symbol}
+                onClick={() => handleOpenDetail(quote.symbol)}
+                className="group p-5 rounded-2xl bg-[#121214] border border-[#27272A] hover:border-violet-500/50 transition-all shadow-md hover:shadow-violet-950/20 flex flex-col justify-between cursor-pointer"
               >
                 <div>
-                  {/* Top Card Bar */}
+                  {/* Top Bar */}
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-black text-zinc-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base font-black text-white group-hover:text-violet-400 transition-colors">
                           {quote.symbol}
                         </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${badgeStyles}`}>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-zinc-800 text-zinc-300 border border-zinc-700">
                           {quote.asset_type}
                         </span>
+                        <span className="text-[10px] font-mono text-zinc-500">
+                          {quote.exchange || 'NSE'}
+                        </span>
                       </div>
-                      <h4 className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-1 line-clamp-1">
-                        {quote.name}
+                      <h4 className="text-xs font-medium text-zinc-400 mt-1 line-clamp-1">
+                        {quote.name || quote.symbol}
                       </h4>
                     </div>
 
                     <button
-                      onClick={() => toggleWatchlist(quote.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWatchlist(quote.symbol);
+                      }}
                       className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                         watchlisted
-                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                          : 'border-zinc-200 dark:border-white/10 text-zinc-400 hover:text-purple-500 hover:bg-zinc-50 dark:hover:bg-white/[0.05]'
+                          ? 'bg-violet-600 text-white border-violet-600 shadow-sm'
+                          : 'border-zinc-800 text-zinc-500 hover:text-white hover:bg-zinc-800'
                       }`}
                       title={watchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}
                     >
@@ -248,105 +237,69 @@ export const MarketsView: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Price & Change */}
-                  <div className="mt-4 flex items-baseline justify-between border-y border-zinc-100 dark:border-white/[0.04] py-3">
-                    <div>
-                      <span className="text-xs text-zinc-400 block font-mono">Current Price</span>
-                      <span className="text-xl font-bold font-mono text-zinc-900 dark:text-white">
-                        ₹{quote.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-xs text-zinc-400 block font-mono">24h Change</span>
-                      <span
-                        className={`inline-flex items-center gap-0.5 text-xs font-mono font-bold ${
-                          isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
-                        }`}
-                      >
-                        {isProfit ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                        <span>{quote.change_24h > 0 ? `+${quote.change_24h}%` : `${quote.change_24h}%`}</span>
-                      </span>
-                    </div>
+                  {/* Price Row */}
+                  <div className="mt-4 flex items-baseline justify-between font-mono">
+                    <span className="text-2xl font-black text-white">
+                      ₹{price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span
+                      className={`flex items-center text-xs font-bold ${
+                        isUp ? 'text-emerald-400' : 'text-red-400'
+                      }`}
+                    >
+                      {isUp ? <TrendingUp className="w-3.5 h-3.5 mr-0.5" /> : <TrendingDown className="w-3.5 h-3.5 mr-0.5" />}
+                      {change >= 0 ? `+${change.toFixed(2)}` : change.toFixed(2)} ({changePct >= 0 ? `+${changePct.toFixed(2)}%` : `${changePct.toFixed(2)}%`})
+                    </span>
                   </div>
 
-                  {/* Metrics Row */}
-                  <div className="grid grid-cols-2 gap-2 mt-3 text-[11px] font-mono">
-                    <div className="p-2 rounded-lg bg-zinc-50 dark:bg-white/[0.02]">
-                      <span className="text-zinc-500 dark:text-zinc-400 block text-[10px]">Indicative Yield</span>
-                      <span className="font-bold text-purple-600 dark:text-purple-400">
-                        {quote.annual_yield > 0 ? `${quote.annual_yield}%` : 'N/A'}
-                      </span>
+                  {/* Volume & Range */}
+                  <div className="mt-3 pt-3 border-t border-zinc-800/80 grid grid-cols-2 text-[11px] font-mono text-zinc-500">
+                    <div>
+                      <span>Vol: </span>
+                      <strong className="text-zinc-300">{quote.volume ? quote.volume.toLocaleString('en-IN') : '—'}</strong>
                     </div>
-                    <div className="p-2 rounded-lg bg-zinc-50 dark:bg-white/[0.02]">
-                      <span className="text-zinc-500 dark:text-zinc-400 block text-[10px]">Risk Profile</span>
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300">
-                        {quote.risk_level || 'Moderate'}
-                      </span>
+                    <div className="text-right">
+                      <span>52W: </span>
+                      <strong className="text-zinc-300">{quote.day_52w_high ? `₹${quote.day_52w_high}` : '—'}</strong>
                     </div>
                   </div>
                 </div>
 
-                {/* Card Action Controls */}
-                <div className="mt-5 pt-3 border-t border-zinc-100 dark:border-white/[0.06] flex items-center gap-2">
+                {/* Bottom Action Strip */}
+                <div
+                  className="mt-4 pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
-                    onClick={() => openAssetModal(quote as any)}
-                    className="flex-1 py-2 px-2.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/40 hover:text-purple-600 dark:hover:text-white transition-all flex items-center justify-center gap-1 cursor-pointer"
+                    onClick={() => handleOpenDetail(quote.symbol)}
+                    className="flex items-center space-x-1 text-zinc-400 hover:text-white transition-colors"
                   >
-                    <Info className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Details</span>
+                    <BarChart2 className="w-3.5 h-3.5 text-violet-400" />
+                    <span>Chart</span>
                   </button>
 
-                  <button
-                    onClick={() => openPaperTradeModal(quote)}
-                    className="flex-1 py-2 px-2.5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-sm transition-all flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <Coins className="w-3.5 h-3.5" />
-                    <span>Trade</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleAiExplain(quote)}
-                    className="p-2 rounded-xl text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-600/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all cursor-pointer"
-                    title="Explain with Local AI"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleAiExplain(quote)}
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-violet-400 hover:bg-zinc-800 transition-colors"
+                      title="Ask ZeroLatency Copilot about this asset"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => openPaperTradeModal(quote)}
+                      className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-950/40 transition-all cursor-pointer"
+                    >
+                      <Coins className="w-3.5 h-3.5" />
+                      <span>Trade</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       )}
-
-      {/* 5. PUBLIC WEALTH OS CTA CALLOUT BANNER */}
-      <div className="p-8 rounded-3xl bg-gradient-to-r from-purple-950/50 via-[#161224] to-indigo-950/50 border border-purple-500/30 relative overflow-hidden shadow-2xl">
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-purple-400 font-bold">
-            UNIFIED MULTI-ASSET INTELLIGENCE
-          </span>
-          <h3 className="text-2xl font-black text-white tracking-tight">
-            Ready to unify all your holdings under ZeroLatency Wealth OS?
-          </h3>
-          <p className="text-xs text-zinc-300 leading-relaxed">
-            Create your account to simulate paper trading with ₹10,00,000 initial capital, track personalized goals, and interact with the local AI Copilot.
-          </p>
-          <div className="pt-2 flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setCurrentView('signup')}
-              className="px-6 py-3 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all cursor-pointer"
-            >
-              Create Free Account
-            </button>
-            <button
-              onClick={() => setCurrentView('login')}
-              className="px-5 py-3 rounded-xl text-xs font-semibold text-zinc-300 bg-white/10 hover:bg-white/15 border border-white/10 transition-all cursor-pointer"
-            >
-              Sign In to Terminal
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

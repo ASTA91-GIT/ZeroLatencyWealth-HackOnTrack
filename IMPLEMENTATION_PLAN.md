@@ -363,3 +363,127 @@ Phase 13 ──► Phase 14
 - **Relevant Files:** `TRD.md`, `APP_FLOW.md`, `TESTING.md`, `README.md`
 - **Verification:** Clean git tree; all acceptance criteria satisfied.
 - **Status:** COMPLETE
+
+---
+
+## Phase 25 — Real Market Data Foundation & Provider Abstraction
+- **Objective:** Eliminate all mock/fake market data across the backend and implement an extensible `MarketDataProvider` abstraction.
+- **Tasks:**
+  - Implement `MarketDataProvider` protocol with canonical methods (`get_quote`, `get_quotes`, `get_historical_candles`, `get_market_depth`, `get_option_chain`, `get_fundamentals`, etc.).
+  - Implement `RealMarketProvider` querying live exchange quotes, indices (NIFTY 50, SENSEX, BANK NIFTY), commodities (Gold, Silver, Crude), currencies (USD/INR), and real historical OHLCV data.
+  - Build Angel One SmartAPI provider skeleton with secure server-side credential loading from environment variables.
+  - Build NSE/BSE exchange session calendar engine (`market_session.py`) evaluating IST trading hours and holidays (09:15–15:30 IST).
+  - Deploy high-speed TTL cache (`cache.py`) with Redis fallback.
+- **Relevant Files:** `backend/market_data/provider.py`, `backend/market_data/providers/real_market_provider.py`, `backend/market_data/providers/angel_one.py`, `backend/market_data/market_session.py`, `backend/market_data/cache.py`
+- **Verification:** Zero hardcoded prices in responses; verified against live market APIs.
+- **Status:** COMPLETE
+
+---
+
+## Phase 26 — Live Markets Terminal & Real-Time Ticker
+- **Objective:** Build `/markets` terminal view with real-time ticker tape, global indices, commodities, currencies, and symbol search.
+- **Tasks:**
+  - Build `MarketTickerTape.tsx` with animated price tick deltas (subtle green/red text pulse without flashing cards).
+  - Build `MarketsView.tsx` with category filters (Equities, Indices, Commodities, Currencies, REITs, InvITs).
+  - Implement real-time market breadth calculator (Advancers, Decliners, Unchanged).
+  - Implement symbol search querying the verified instrument master.
+- **Relevant Files:** `frontend/src/views/MarketsView.tsx`, `frontend/src/components/trading/MarketTickerTape.tsx`, `backend/main.py`
+- **Verification:** Live quotes and indices stream through WebSocket and REST; zero fake data.
+- **Status:** COMPLETE
+
+---
+
+## Phase 27 — TradingView Lightweight Charts & Technical Indicators
+- **Objective:** Integrate TradingView Lightweight Charts v5 for professional financial charting with real historical candles and live tick updates.
+- **Tasks:**
+  - Build `LightweightChart.tsx` using `lightweight-charts` v5 (`addSeries(CandlestickSeries, ...)`).
+  - Support multiple chart types: Candlestick, Line, Area, Bar, with volume histogram panel.
+  - Support multi-timeframe intervals: 1m, 5m, 15m, 1h, 1D, 1W, 1M from real OHLCV data.
+  - Build technical indicators service (`backend/market_data/services/indicators.py`) computing SMA, EMA, RSI, MACD, Bollinger Bands, and VWAP on real candle arrays.
+  - Implement incremental active candle updates via WebSocket ticks (High/Low/Close/Volume updates in place).
+- **Relevant Files:** `frontend/src/components/trading/LightweightChart.tsx`, `backend/market_data/services/indicators.py`, `frontend/src/views/InstrumentDetailView.tsx`
+- **Verification:** Verified candlestick rendering and indicator overlay without chart reloading on new ticks.
+- **Status:** COMPLETE
+
+---
+
+## Phase 28 — Watchlists & Dynamic Price Alerts Engine
+- **Objective:** Deploy user-isolated watchlists with live WebSocket updates and a server-side price alerts engine.
+- **Tasks:**
+  - Build Alert engine (`backend/market_data/services/alerts.py`) supporting Above, Below, and % Move conditions with 30s cooldowns.
+  - Expose `/api/alerts` CRUD endpoints.
+  - Integrate live alerts manager into `WatchlistView.tsx` with threshold tracking.
+- **Relevant Files:** `backend/market_data/services/alerts.py`, `frontend/src/views/WatchlistView.tsx`
+- **Verification:** Alerts evaluate accurately against incoming quotes; duplicate alerts suppressed during cooldown.
+- **Status:** COMPLETE
+
+---
+
+## Phase 29 — Multi-Asset Screener & Dynamic Heatmap
+- **Objective:** Build an institutional screener (`/screener`) with real metrics, multi-criteria filtering, and market heatmap view.
+- **Tasks:**
+  - Build screener service (`backend/market_data/services/screener.py`) filtering by Price, % Change, Volume, Market Cap, P/E, and Sector.
+  - Build `ScreenerView.tsx` with Table and Heatmap views.
+  - Heatmap tile sizing reflects relative market capitalization; color intensity reflects verified percentage change.
+- **Relevant Files:** `frontend/src/views/ScreenerView.tsx`, `backend/market_data/services/screener.py`
+- **Verification:** Table filters cleanly and heatmap calculates accurate color gradients from real quotes.
+- **Status:** COMPLETE
+
+---
+
+## Phase 30 — Real Company Fundamentals & Financial Statements
+- **Objective:** Deliver verified equity fundamentals and live market news on instrument deep-dives.
+- **Tasks:**
+  - Build fundamentals ingestion (`get_fundamentals()`) extracting P/E, P/B, EPS, Market Cap, 52W High/Low, ROE, ROCE, and Financial Statements (Income, Balance Sheet, Cash Flow).
+  - Ingest genuine market news with headlines, publishers, and timestamps.
+  - Build transparent Level 2 depth disclaimer: *"Market depth unavailable for this instrument"* where broker L2 feeds are restricted.
+- **Relevant Files:** `frontend/src/views/InstrumentDetailView.tsx`, `backend/market_data/providers/real_market_provider.py`
+- **Verification:** Tested against real equities (e.g. RELIANCE, TCS, INFY); zero fake numbers.
+- **Status:** COMPLETE
+
+---
+
+## Phase 31 — Options Chain & Derivatives Desk
+- **Objective:** Provide a professional `/options` desk with calls, puts, and strikes.
+- **Tasks:**
+  - Create `OptionsView.tsx` with strike selector, calls/puts LTP, change, OI, and volume.
+  - Transparently display regulatory disclaimer when broker derivatives feeds require dedicated exchange licensing.
+- **Relevant Files:** `frontend/src/views/OptionsView.tsx`, `backend/market_data/models.py`
+- **Verification:** Desk renders with clean ATM strike highlighting and licensing transparency.
+- **Status:** COMPLETE
+
+---
+
+## Phase 32 — Real-Price Paper Trading & Dynamic Portfolio Valuation
+- **Objective:** Wire paper trading execution to real exchange market prices and dynamically revalue portfolios.
+- **Tasks:**
+  - Update `paper_trading_service.py` to execute simulated buy/sell orders at current market quotes.
+  - Portfolio unrealized P&L updates continuously as WebSocket ticks stream.
+  - Preserve ₹10,00,000 virtual capital account with transaction auditing.
+- **Relevant Files:** `backend/services/paper_trading_service.py`, `frontend/src/views/WatchlistView.tsx`
+- **Verification:** Automated tests verify buy/sell orders at live prices update cash and P&L deterministically.
+- **Status:** COMPLETE
+
+---
+
+## Phase 33 — AI Copilot Live Market Context Ingestion
+- **Objective:** Ingest current real-time market snapshots into Copilot prompts.
+- **Tasks:**
+  - Update `local_ai_service.py` to retrieve live market overviews (NIFTY, Sensex, commodities, top movers) when users ask market questions.
+  - Enforce factual grounding: distinguish between fact, calculation, and interpretation. Copilot clearly states when live data is unavailable.
+- **Relevant Files:** `backend/services/local_ai_service.py`
+- **Verification:** Copilot answers questions with accurate current market numbers.
+- **Status:** COMPLETE
+
+---
+
+## Phase 34 — Terminal Experience, Connection Resilience & Dark-Only Enforcement
+- **Objective:** Harden WebSocket connections, implement stale data indicators, and enforce permanent Dark Mode.
+- **Tasks:**
+  - Implement WebSocket client (`marketWebSocket.ts`) with exponential backoff reconnect, heartbeat, and stale-data timers.
+  - Enforce permanent Dark Mode (`#09090B` background, `#18181B` cards, electric purple and emerald accents); remove all light mode toggles.
+  - Verify complete end-to-end integration and run full automated test suite.
+- **Relevant Files:** `frontend/src/services/marketWebSocket.ts`, `frontend/src/index.css`, `frontend/src/context/AppContext.tsx`, `tests/test_live_market_platform.py`
+- **Verification:** 16/16 backend tests pass; frontend builds with 0 errors.
+- **Status:** COMPLETE
+

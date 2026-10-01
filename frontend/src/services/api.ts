@@ -12,7 +12,16 @@ import type {
   PaperAccount,
   PaperOrder,
   PaperOrderResponse,
-  AiHealthResponse
+  AiHealthResponse,
+  CandleData,
+  MarketDepthData,
+  CompanyFundamentals,
+  MarketNews,
+  EconomicEvent,
+  OptionChainData,
+  PriceAlert,
+  MarketSessionStatus,
+  MarketBreadthData
 } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -150,6 +159,15 @@ class ApiClient {
     return this.request<MarketOverview>('/markets/overview');
   }
 
+  async getMarketStatus(exchange: string = 'NSE'): Promise<MarketSessionStatus> {
+    return this.request<MarketSessionStatus>(`/markets/status?exchange=${exchange}`);
+  }
+
+  async getMarketInstruments(assetType?: string): Promise<any[]> {
+    const q = assetType ? `?asset_type=${assetType}` : '';
+    return this.request<any[]>(`/markets/instruments${q}`);
+  }
+
   async getMarketQuotes(params?: { asset_type?: string; search?: string }): Promise<MarketQuote[]> {
     const query = new URLSearchParams();
     if (params?.asset_type) query.append('asset_type', params.asset_type);
@@ -159,6 +177,86 @@ class ApiClient {
 
   async getMarketQuoteDetail(symbolOrId: string): Promise<MarketQuote> {
     return this.request<MarketQuote>(`/markets/quote/${symbolOrId}`);
+  }
+
+  async getMarketCandles(symbol: string, interval: string = '1d', rangePeriod: string = '1mo'): Promise<{ symbol: string; interval: string; range_period: string; candles: CandleData[] }> {
+    return this.request<{ symbol: string; interval: string; range_period: string; candles: CandleData[] }>(`/markets/history/${symbol}?interval=${interval}&range_period=${rangePeriod}`);
+  }
+
+  async getMarketDepth(symbol: string): Promise<MarketDepthData> {
+    return this.request<MarketDepthData>(`/markets/depth/${symbol}`);
+  }
+
+  async getIndices(): Promise<MarketQuote[]> {
+    return this.request<MarketQuote[]>('/markets/indices');
+  }
+
+  async getCommodities(): Promise<MarketQuote[]> {
+    return this.request<MarketQuote[]>('/markets/commodities');
+  }
+
+  async getCurrencies(): Promise<MarketQuote[]> {
+    return this.request<MarketQuote[]>('/markets/currencies');
+  }
+
+  async getMovers(): Promise<{ top_gainers: MarketQuote[]; top_losers: MarketQuote[] }> {
+    return this.request<{ top_gainers: MarketQuote[]; top_losers: MarketQuote[] }>('/markets/movers');
+  }
+
+  async getBreadth(): Promise<MarketBreadthData> {
+    return this.request<MarketBreadthData>('/markets/breadth');
+  }
+
+  async getMarketNews(category?: string): Promise<MarketNews[]> {
+    const q = category ? `?category=${category}` : '';
+    return this.request<MarketNews[]>(`/markets/news${q}`);
+  }
+
+  async getEconomicCalendar(): Promise<EconomicEvent[]> {
+    return this.request<EconomicEvent[]>('/markets/calendar');
+  }
+
+  async getCompanyFundamentals(symbol: string): Promise<CompanyFundamentals> {
+    return this.request<CompanyFundamentals>(`/fundamentals/${symbol}`);
+  }
+
+  async getOptionChain(symbol: string, expiry?: string): Promise<OptionChainData> {
+    const q = expiry ? `?expiry=${expiry}` : '';
+    return this.request<OptionChainData>(`/options/${symbol}/chain${q}`);
+  }
+
+  async getScreener(filters?: Record<string, any>): Promise<MarketQuote[]> {
+    const query = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== '') {
+          query.append(k, String(v));
+        }
+      });
+    }
+    return this.request<MarketQuote[]>(`/screener?${query.toString()}`);
+  }
+
+  async getIndicators(symbol: string, indicator: string, period: number = 14, interval: string = '1d', rangePeriod: string = '3mo'): Promise<any> {
+    return this.request(`/indicators/${symbol}?indicator=${indicator}&period=${period}&interval=${interval}&range_period=${rangePeriod}`);
+  }
+
+  // ----------------- ALERTS -----------------
+
+  async getAlerts(): Promise<PriceAlert[]> {
+    return this.request<PriceAlert[]>('/alerts');
+  }
+
+  async createAlert(alert: { symbol: string; target_price: number; condition: string }): Promise<PriceAlert> {
+    return this.request<PriceAlert>('/alerts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(alert)
+    });
+  }
+
+  async deleteAlert(alertId: string): Promise<void> {
+    await this.request(`/alerts/${alertId}`, { method: 'DELETE' });
   }
 
   // ----------------- PORTFOLIO & ASSETS -----------------

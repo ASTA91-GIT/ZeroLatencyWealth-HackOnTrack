@@ -8,6 +8,8 @@ from backend.db_models import (
     DBPaperAccount, DBPaperOrder, DBHolding, DBTransaction, DBAsset, DBUser
 )
 
+from backend.market_data import get_market_data_provider
+
 DEFAULT_INITIAL_CASH = 1000000.0  # ₹10,00,000 simulated buying power
 
 def get_or_create_paper_account(user_id: str, db: Optional[Session] = None) -> DBPaperAccount:
@@ -37,10 +39,20 @@ def get_paper_account_summary(user_id: str) -> Dict[str, Any]:
     try:
         acc = get_or_create_paper_account(user_id, db)
         
-        # Calculate paper holdings value for this user
+        # Calculate paper holdings value for this user with real market updates
         holdings = db.query(DBHolding).filter(DBHolding.user_id == user_id).all()
-        holdings_value = sum(h.units * h.current_price for h in holdings)
-        invested_value = sum(h.units * h.avg_buy_price for h in holdings)
+        holdings_value = 0.0
+        invested_value = 0.0
+
+        for h in holdings:
+            # Sync with real asset if available
+            asset = db.query(DBAsset).filter(DBAsset.id == h.asset_id).first()
+            current_unit_price = h.current_price
+            if asset:
+                current_unit_price = asset.price
+            holdings_value += h.units * current_unit_price
+            invested_value += h.units * h.avg_buy_price
+
         unrealized_pl = holdings_value - invested_value
 
         return {
@@ -63,7 +75,7 @@ def execute_paper_order(
     units: float,
     limit_price: Optional[float] = None
 ) -> Dict[str, Any]:
-    """Execute simulated paper trade with balance checks, holding updates, transaction record, and user isolation."""
+    """Execute simulated paper trade with real market prices, balance checks, and user isolation."""
     order_type = order_type.upper().strip()
     if order_type not in ("BUY", "SELL"):
         return {"success": False, "message": "Invalid order type. Must be BUY or SELL."}

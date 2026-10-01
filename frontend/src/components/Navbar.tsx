@@ -12,9 +12,6 @@ import {
   UploadCloud,
   ShieldCheck,
   Cpu,
-  RotateCcw,
-  Sun,
-  Moon,
   Menu,
   X,
   Settings,
@@ -23,7 +20,9 @@ import {
   UserPlus,
   LogOut,
   User,
-  Coins
+  Coins,
+  SlidersHorizontal,
+  Calendar
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -32,68 +31,58 @@ export const Navbar: React.FC = () => {
     setCurrentView,
     user,
     isAuthenticated,
-    isDemo,
     logout,
-    loginAsDemoUser,
-    resetDemoData,
-    loading,
     setIsCopilotDrawerOpen,
     aiHealth,
-    theme,
-    toggleTheme
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [resetting, setResetting] = useState(false);
 
-  // Dynamic Navigation Links: Public vs Authenticated
+  // Navigation Links
   const publicLinks: { view: ViewType; label: string; icon: React.ReactNode }[] = [
     { view: 'markets', label: 'Markets', icon: <Compass className="w-3.5 h-3.5" /> },
-    { view: 'explorer', label: 'Assets', icon: <Layers className="w-3.5 h-3.5" /> },
+    { view: 'screener', label: 'Screener', icon: <SlidersHorizontal className="w-3.5 h-3.5" /> },
+    { view: 'options', label: 'Options', icon: <Layers className="w-3.5 h-3.5" /> },
+    { view: 'calendar', label: 'Calendar', icon: <Calendar className="w-3.5 h-3.5" /> },
     { view: 'learning', label: 'Academy', icon: <GraduationCap className="w-3.5 h-3.5" /> },
-    { view: 'architecture', label: 'Architecture', icon: <Cpu className="w-3.5 h-3.5" /> },
     { view: 'security', label: 'Security', icon: <ShieldCheck className="w-3.5 h-3.5" /> },
   ];
 
   const authLinks: { view: ViewType; label: string; icon: React.ReactNode }[] = [
     { view: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-3.5 h-3.5" /> },
-    { view: 'portfolio', label: 'Holdings', icon: <Layers className="w-3.5 h-3.5" /> },
     { view: 'markets', label: 'Markets', icon: <Compass className="w-3.5 h-3.5" /> },
+    { view: 'screener', label: 'Screener', icon: <SlidersHorizontal className="w-3.5 h-3.5" /> },
+    { view: 'options', label: 'Options', icon: <Layers className="w-3.5 h-3.5" /> },
+    { view: 'calendar', label: 'Calendar', icon: <Calendar className="w-3.5 h-3.5" /> },
     { view: 'watchlist', label: 'Watchlist', icon: <Bookmark className="w-3.5 h-3.5" /> },
+    { view: 'papertrading', label: 'Paper Trading', icon: <Coins className="w-3.5 h-3.5" /> },
+    { view: 'portfolio', label: 'Holdings', icon: <Layers className="w-3.5 h-3.5" /> },
     { view: 'insights', label: 'AI Insights', icon: <LineChart className="w-3.5 h-3.5" /> },
-    { view: 'goals', label: 'Goals', icon: <Target className="w-3.5 h-3.5" /> },
-    { view: 'import', label: 'Import', icon: <UploadCloud className="w-3.5 h-3.5" /> },
   ];
 
   const navLinks = isAuthenticated ? authLinks : publicLinks;
 
-  const handleReset = async () => {
-    setResetting(true);
-    await resetDemoData();
-    setResetting(false);
-  };
-
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-200/80 dark:border-white/[0.08] bg-white/80 dark:bg-[#09090d]/80 backdrop-blur-xl transition-colors duration-200">
+    <header className="sticky top-0 z-40 w-full border-b border-[#27272A] bg-[#09090B]/90 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-15">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <div onClick={() => setCurrentView('landing')} className="flex items-center gap-2 cursor-pointer">
             <Logo size="md" />
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden xl:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center space-x-1">
             {navLinks.map((item) => {
               const isActive = currentView === item.view;
               return (
                 <button
                   key={item.view}
                   onClick={() => setCurrentView(item.view)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all duration-150 cursor-pointer ${
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-purple-600/10 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.15)]'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.04]'
+                      ? 'bg-violet-600/15 text-violet-400 border border-violet-500/30 shadow-[0_0_12px_rgba(139,92,246,0.15)] font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
                   }`}
                 >
                   {item.icon}
@@ -104,85 +93,47 @@ export const Navbar: React.FC = () => {
           </nav>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Theme Toggle (Light / Dark) */}
-            <button
-              onClick={toggleTheme}
-              className="p-1.5 rounded-lg border border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-all cursor-pointer"
-              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-              aria-label="Toggle Theme"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-purple-600" />
-              )}
-            </button>
-
-            {/* DEMO MODE Badge (Shown only when in demo mode) */}
-            {isDemo && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-600/40 text-[10px] font-bold text-purple-700 dark:text-purple-300 tracking-wider">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
-                </span>
-                <span>DEMO MODE</span>
-              </div>
-            )}
-
-            {/* Reset Demo Data Button (Only when demo mode is active) */}
-            {isDemo && (
-              <button
-                onClick={handleReset}
-                disabled={resetting || loading}
-                title="Reset portfolio data back to canonical benchmark"
-                className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100/80 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/40 hover:text-purple-600 dark:hover:text-purple-300 transition-all cursor-pointer"
-              >
-                <RotateCcw className={`w-3 h-3 ${resetting ? 'animate-spin text-purple-500' : ''}`} />
-                <span>Reset</span>
-              </button>
-            )}
-
-            {/* Local AI Copilot Drawer Trigger */}
+          <div className="flex items-center space-x-2.5">
+            {/* ZeroLatency Copilot Trigger */}
             <button
               onClick={() => setIsCopilotDrawerOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(139,92,246,0.35)] transition-all cursor-pointer relative"
-              title={aiHealth?.status === 'ONLINE' ? 'Local Ollama AI: Online' : 'Local AI: Knowledge Engine Fallback'}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-md shadow-violet-950/40 transition-all cursor-pointer"
+              title={aiHealth?.status === 'ONLINE' ? 'Copilot: Online' : 'Copilot: Market Intelligence Engine'}
             >
               <Sparkles className="w-3.5 h-3.5 fill-white" />
               <span>Copilot</span>
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  aiHealth?.status === 'ONLINE' ? 'bg-emerald-400' : 'bg-purple-300'
+                  aiHealth?.status === 'ONLINE' ? 'bg-emerald-400' : 'bg-violet-300'
                 }`}
               />
             </button>
 
             {/* Authentication States */}
             {isAuthenticated ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setCurrentView('settings')}
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-white/10 text-xs text-zinc-700 dark:text-zinc-300 hover:border-purple-400 transition-all cursor-pointer"
+                  className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800 text-xs text-zinc-300 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
                   title="Profile & Settings"
                 >
-                  <User className="w-3.5 h-3.5 text-purple-500" />
+                  <User className="w-3.5 h-3.5 text-violet-400" />
                   <span className="font-semibold max-w-[100px] truncate">{user?.name}</span>
                 </button>
 
                 <button
                   onClick={logout}
-                  className="p-1.5 rounded-lg border border-zinc-200 dark:border-white/10 text-zinc-500 hover:text-rose-500 hover:border-rose-400 transition-all cursor-pointer"
+                  className="p-1.5 rounded-lg border border-zinc-800 text-zinc-500 hover:text-red-400 hover:border-red-900/40 transition-all cursor-pointer"
                   title="Log Out"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setCurrentView('login')}
-                  className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-white transition-all cursor-pointer"
+                  className="hidden sm:flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white transition-all cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5 text-zinc-400" />
                   <span>Log In</span>
@@ -190,7 +141,7 @@ export const Navbar: React.FC = () => {
 
                 <button
                   onClick={() => setCurrentView('signup')}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 transition-all shadow-sm cursor-pointer"
+                  className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 transition-all shadow-sm cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>Sign Up</span>
@@ -198,78 +149,40 @@ export const Navbar: React.FC = () => {
               </div>
             )}
 
-            {/* Mobile menu trigger */}
+            {/* Mobile Hamburger Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-1.5 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-white/10"
-              aria-label="Toggle navigation menu"
+              className="xl:hidden p-1.5 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+              aria-label="Toggle Mobile Menu"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="xl:hidden py-3 border-t border-[#27272A] grid grid-cols-2 gap-1.5 text-xs animate-in fade-in duration-150">
+            {navLinks.map((item) => (
+              <button
+                key={item.view}
+                onClick={() => {
+                  setCurrentView(item.view);
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-all text-left ${
+                  currentView === item.view
+                    ? 'bg-violet-600/20 text-violet-400 border border-violet-500/30 font-bold'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/40'
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* Mobile Navigation Dropdown */}
-      {mobileMenuOpen && (
-        <div className="xl:hidden border-b border-zinc-200 dark:border-white/10 bg-white/95 dark:bg-[#0d0d12]/95 backdrop-blur-2xl px-4 py-3 space-y-1">
-          {navLinks.map((item) => (
-            <button
-              key={item.view}
-              onClick={() => {
-                setCurrentView(item.view);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                currentView === item.view
-                  ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30'
-                  : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/[0.05]'
-              }`}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </button>
-          ))}
-
-          {!isAuthenticated && (
-            <div className="pt-2 border-t border-zinc-200 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
-              <button
-                onClick={() => {
-                  setCurrentView('login');
-                  setMobileMenuOpen(false);
-                }}
-                className="py-2 text-center rounded-lg border border-zinc-200 dark:border-white/10 font-bold"
-              >
-                Log In
-              </button>
-              <button
-                onClick={() => {
-                  setCurrentView('signup');
-                  setMobileMenuOpen(false);
-                }}
-                className="py-2 text-center rounded-lg bg-purple-600 text-white font-bold"
-              >
-                Sign Up
-              </button>
-            </div>
-          )}
-
-          {isDemo && (
-            <div className="pt-2 border-t border-zinc-200 dark:border-white/10 flex items-center justify-between text-xs">
-              <button
-                onClick={handleReset}
-                className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 py-1"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-purple-500" />
-                <span>Reset Benchmark Data</span>
-              </button>
-              <span className="text-[11px] text-purple-600 dark:text-purple-400 font-mono font-bold">
-                ₹8,42,500
-              </span>
-            </div>
-          )}
-        </div>
-      )}
     </header>
   );
 };

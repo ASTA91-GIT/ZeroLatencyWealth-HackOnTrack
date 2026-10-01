@@ -278,11 +278,48 @@ python tests/test_production_platform.py
 ## 15. Frontend Production Build Verification
 
 - **Command:** `npm run build` inside `frontend/`
-- **Modules Transformed:** 2,488 modules
+- **Modules Transformed:** 2,500+ modules (including TradingView Lightweight Charts v5)
 - **Output Artifacts:**
   - `dist/index.html` (1.48 kB)
   - `dist/assets/index-*.css` (~87 kB)
-  - `dist/assets/index-*.js` (~1.34 MB)
+  - `dist/assets/index-*.js` (~1.4 MB)
 - **Compiler Warnings / Errors:** Zero TypeScript or JSX build errors.
 - **Exit Code:** `0`
 - **Result:** **PASS**
+
+---
+
+## 16. Live Market Platform & Trading Terminal Verification
+
+### Automated Pytest Suite Summary
+- **Execution Command:** `C:\Python314\python.exe -m pytest tests\test_production_platform.py tests\test_live_market_platform.py`
+- **Total Tests Collected:** 16
+- **Total Tests Passed:** 16 (**100% Pass Rate**)
+- **Total Tests Failed:** 0
+- **Execution Time:** ~41 seconds
+
+```text
+tests/test_production_platform.py .........                              [ 56%]
+tests/test_live_market_platform.py .......                               [100%]
+====================== 16 passed, 33 warnings in 41.58s =======================
+```
+
+### Verified Production Capabilities:
+1. **Zero Fake Data Policy Compliance (`test_no_fake_data_in_quotes`):**
+   - Verified that all market quote endpoints query genuine exchange symbols and return real market prices.
+   - Tested that prices are positive, volumes and timestamps are genuine, and no `Math.random()` or hardcoded mock prices exist in production execution paths.
+2. **Exchange Market Session Engine (`test_market_session_engine`):**
+   - Validated that the session evaluator dynamically computes NSE/BSE status (`OPEN`, `CLOSED`, `PRE-MARKET`, `POST-MARKET`) against Indian Standard Time (IST 09:15–15:30) and the exchange holiday calendar.
+3. **Real Historical Candles & Multi-Timeframes (`test_real_historical_candles`):**
+   - Verified genuine OHLCV candle arrays across standard intervals (`1m`, `5m`, `15m`, `1h`, `1d`).
+   - Verified candle timestamps, high >= low, and volume integrity.
+4. **Transparent Regulatory & Data Availability (`test_unavailable_states_for_depth_and_options`):**
+   - Verified that Level 2 market depth and options chain return an explicit `"Data unavailable"` state (`is_available: false`) with a disclaimer rather than fabricating simulated order books.
+5. **Real Technical Indicator Engine (`test_technical_indicators_engine`):**
+   - Verified SMA, EMA, RSI, MACD, and Bollinger Bands calculation directly on real candle data arrays.
+6. **Price Alerts Engine (`test_price_alerts_engine`):**
+   - Tested creating, listing, and evaluating price alerts (Above, Below, % move) with 30s cooldown periods to prevent notification storms.
+7. **Real-Price Paper Trading & Dynamic Valuation (`test_real_market_paper_trading`):**
+   - Verified paper trading buy/sell orders execute strictly against the live market price of the asset.
+   - Verified cash deductions, holdings updates, and dynamic portfolio P&L recalculation matching live exchange quotes.
+

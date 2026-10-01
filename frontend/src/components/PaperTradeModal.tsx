@@ -49,7 +49,7 @@ export const PaperTradeModal: React.FC<PaperTradeModalProps> = ({ asset, onClose
     setSubmitting(true);
     try {
       const res = await api.placePaperOrder({
-        asset_id: asset.id,
+        asset_id: asset.id || asset.symbol || '',
         order_type: orderType,
         units: units,
         limit_price: currentPrice

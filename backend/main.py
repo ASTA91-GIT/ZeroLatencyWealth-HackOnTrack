@@ -1,8 +1,10 @@
 import os
+import json
 import logging
 from contextlib import asynccontextmanager
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Header, Request, status
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Header, Request, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -23,7 +25,16 @@ from backend.services.portfolio_service import (
     get_user_portfolio_summary, get_user_holdings, get_asset_by_id,
     get_all_assets, reset_demo_portfolio
 )
-from backend.services.market_data_service import get_market_data_provider
+from backend.market_data import get_market_data_provider
+from backend.market_data.websocket_manager import ws_manager
+from backend.market_data.streamer import market_streamer
+from backend.market_data.services.screener import run_market_screener
+from backend.market_data.services.alerts import create_alert, get_user_alerts, delete_alert
+from backend.market_data.services.indicators import (
+    calculate_sma, calculate_ema, calculate_rsi, calculate_macd,
+    calculate_bollinger_bands, calculate_vwap, calculate_atr
+)
+from backend.market_data.market_session import get_market_session_status
 from backend.services.analytics_service import get_portfolio_insights
 from backend.services.goals_service import (
     get_user_goals, create_goal, update_goal, delete_goal
@@ -48,17 +59,21 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize and seed benchmark demo data
+    # Initialize database
     init_db()
     seed_demo_data(force=False)
-    logger.info("ZeroLatency Wealth backend started with database initialized.")
+    # Start live market WebSocket streaming worker
+    await market_streamer.start()
+    logger.info("ZeroLatency Wealth backend started with live market streaming.")
     yield
+    # Stop background streamer
+    await market_streamer.stop()
     logger.info("ZeroLatency Wealth backend shutting down.")
 
 app = FastAPI(
     title="ZeroLatency Wealth API",
-    description="Backend services for ZeroLatency Wealth: Unified Multi-Asset Investing & Awareness Platform",
-    version="2.0.0",
+    description="Real-Time Financial Intelligence Terminal & Paper Trading Platform",
+    version="3.0.0",
     lifespan=lifespan
 )
 
@@ -231,28 +246,237 @@ def verify_email(req: VerifyEmailRequest):
         raise HTTPException(status_code=400, detail=msg)
     return {"success": True, "message": msg}
 
-# ----------------- PUBLIC MARKET EXPLORER (Requirement #2, #3) -----------------
+# ----------------- REAL-TIME MARKET DATA & WEBSOCKET ENGINE -----------------
+
+class AlertCreatePayload(BaseModel):
+    symbol: str
+    target_price: float
+    condition: str = "ABOVE"
+
+@app.websocket("/api/ws/markets")
+async def websocket_markets_endpoint(websocket: WebSocket):
+    """Real-time market data streaming WebSocket endpoint.
+    Clients receive live price ticks, connection health, and market status updates.
+    """
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            data_text = await websocket.receive_text()
+            try:
+                msg = json.loads(data_text)
+                action = msg.get("action")
+                if action == "subscribe":
+                    symbols = msg.get("symbols", [])
+                    ws_manager.subscribe(websocket, symbols)
+                    await websocket.send_json({
+                        "type": "SUBSCRIPTION_CONFIRMED",
+                        "symbols": symbols
+                    })
+                elif action == "unsubscribe":
+                    symbols = msg.get("symbols", [])
+                    ws_manager.unsubscribe(websocket, symbols)
+                elif action == "ping":
+                    await websocket.send_json({"type": "pong"})
+            except json.JSONDecodeError:
+                pass
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket client error: {e}")
+        ws_manager.disconnect(websocket)
+
+@app.get("/api/markets/status")
+def get_session_status(exchange: Optional[str] = "NSE"):
+    """Get accurate live market session status (OPEN, CLOSED, PRE-MARKET, POST-MARKET) and calendar."""
+    return get_market_session_status(exchange)
+
+@app.get("/api/markets/instruments")
+def get_market_instruments(asset_type: Optional[str] = None):
+    """Retrieve catalog of supported real market instruments."""
+    provider = get_market_data_provider()
+    return provider.get_instruments(asset_type=asset_type)
 
 @app.get("/api/markets/overview")
-def get_market_overview():
-    """Retrieve live/demo market indices, market status, and top movers."""
+async def get_market_overview():
+    """Retrieve live market indices, market session status, and top movers."""
     provider = get_market_data_provider()
-    return provider.get_market_overview()
+    return await provider.get_market_overview()
 
 @app.get("/api/markets/quotes")
-def get_market_quotes(asset_type: Optional[str] = "ALL", search: Optional[str] = None):
-    """Retrieve normalized quotes for public market explorer."""
+async def get_market_quotes(asset_type: Optional[str] = "ALL", search: Optional[str] = None):
+    """Retrieve normalized live quotes for tracked instruments."""
     provider = get_market_data_provider()
-    return provider.get_quotes(asset_type=asset_type, search=search)
+    instruments = provider.get_instruments(asset_type=asset_type)
+    symbols = [inst.symbol for inst in instruments]
+    if search:
+        s = search.upper()
+        symbols = [sym for sym in symbols if s in sym]
+    return await provider.get_quotes(symbols)
 
 @app.get("/api/markets/quote/{symbol_or_id}")
-def get_market_quote_detail(symbol_or_id: str):
+async def get_market_quote_detail(symbol_or_id: str):
     """Retrieve deep asset details including historical chart points and fundamentals."""
     provider = get_market_data_provider()
-    detail = provider.get_quote_detail(symbol_or_id)
+    detail = await provider.get_quote_detail(symbol_or_id)
     if not detail:
-        raise HTTPException(status_code=404, detail="Asset quote not found.")
+        # Fallback to direct quote
+        quote = await provider.get_quote(symbol_or_id)
+        if quote:
+            return quote.model_dump()
+        raise HTTPException(status_code=404, detail="Market data unavailable for this instrument.")
     return detail
+
+@app.get("/api/markets/history/{symbol}")
+async def get_market_history(symbol: str, interval: Optional[str] = "1d", range_period: Optional[str] = "1mo"):
+    """Fetch real historical OHLCV candles (1m, 5m, 15m, 1h, 1d, 1wk, 1mo) from live exchange."""
+    provider = get_market_data_provider()
+    candles = await provider.get_historical_candles(symbol, interval=interval, range_period=range_period)
+    return {
+        "symbol": symbol.upper(),
+        "interval": interval,
+        "range_period": range_period,
+        "candles": [c.model_dump() for c in candles]
+    }
+
+@app.get("/api/markets/depth/{symbol}")
+async def get_market_depth(symbol: str):
+    """Fetch Level 2 Market Depth (or explicit unavailable status if licensed subscriber feed not connected)."""
+    provider = get_market_data_provider()
+    depth = await provider.get_market_depth(symbol)
+    return depth.model_dump()
+
+@app.get("/api/markets/indices")
+async def get_indices():
+    """Retrieve live quotes for Indian & Global benchmark indices."""
+    provider = get_market_data_provider()
+    return await provider.get_indices()
+
+@app.get("/api/markets/commodities")
+async def get_commodities():
+    """Retrieve live quotes for Gold, Silver, Crude Oil, Natural Gas."""
+    provider = get_market_data_provider()
+    return await provider.get_commodities()
+
+@app.get("/api/markets/currencies")
+async def get_currencies():
+    """Retrieve live foreign exchange currency rates."""
+    provider = get_market_data_provider()
+    return await provider.get_currencies()
+
+@app.get("/api/markets/movers")
+async def get_movers():
+    """Calculate real top gainers and losers from the active market universe."""
+    provider = get_market_data_provider()
+    return await provider.get_market_movers()
+
+@app.get("/api/markets/breadth")
+async def get_breadth():
+    """Calculate market breadth (advancers, decliners, unchanged, volume ratio) from real market universe."""
+    provider = get_market_data_provider()
+    return await provider.get_market_breadth()
+
+@app.get("/api/markets/news")
+async def get_market_news(category: Optional[str] = None):
+    """Retrieve real financial market news."""
+    provider = get_market_data_provider()
+    return await provider.get_news(category=category)
+
+@app.get("/api/markets/calendar")
+async def get_economic_calendar():
+    """Retrieve economic events calendar."""
+    provider = get_market_data_provider()
+    return await provider.get_economic_calendar()
+
+@app.get("/api/fundamentals/{symbol}")
+async def get_fundamentals(symbol: str):
+    """Retrieve real company fundamentals (P/E, Market Cap, EPS, Financial Statements)."""
+    provider = get_market_data_provider()
+    res = await provider.get_company_fundamentals(symbol)
+    if not res:
+        return {"symbol": symbol.upper(), "is_available": False, "message": "Fundamental data unavailable for this instrument."}
+    return res
+
+@app.get("/api/options/{symbol}")
+@app.get("/api/options/{symbol}/chain")
+async def get_option_chain(symbol: str, expiry: Optional[str] = None):
+    """Retrieve Option Chain (or explicit unavailable status if licensed derivatives feed not connected)."""
+    provider = get_market_data_provider()
+    return await provider.get_option_chain(symbol, expiry=expiry)
+
+@app.get("/api/screener")
+async def screener_endpoint(
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    min_change: Optional[float] = None,
+    max_change: Optional[float] = None,
+    min_volume: Optional[int] = None,
+    sector: Optional[str] = None,
+    exchange: Optional[str] = None,
+    asset_type: Optional[str] = None
+):
+    """Filter real instruments dynamically across market metrics."""
+    filters = {}
+    if min_price is not None: filters["min_price"] = min_price
+    if max_price is not None: filters["max_price"] = max_price
+    if min_change is not None: filters["min_change"] = min_change
+    if max_change is not None: filters["max_change"] = max_change
+    if min_volume is not None: filters["min_volume"] = min_volume
+    if sector: filters["sector"] = sector
+    if exchange: filters["exchange"] = exchange
+    if asset_type: filters["asset_type"] = asset_type
+    return await run_market_screener(filters)
+
+@app.get("/api/indicators/{symbol}")
+async def get_technical_indicators(
+    symbol: str,
+    indicator: str,
+    period: int = 14,
+    interval: str = "1d",
+    range_period: str = "3mo"
+):
+    """Compute mathematical technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands, VWAP, ATR) on real candles."""
+    provider = get_market_data_provider()
+    candles = await provider.get_historical_candles(symbol, interval=interval, range_period=range_period)
+    ind = indicator.upper()
+    if ind == "SMA":
+        return calculate_sma(candles, period=period)
+    elif ind == "EMA":
+        return calculate_ema(candles, period=period)
+    elif ind == "RSI":
+        return calculate_rsi(candles, period=period)
+    elif ind == "MACD":
+        return calculate_macd(candles)
+    elif ind in ["BOLLINGER", "BB"]:
+        return calculate_bollinger_bands(candles, period=period)
+    elif ind == "VWAP":
+        return calculate_vwap(candles)
+    elif ind == "ATR":
+        return calculate_atr(candles, period=period)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported indicator: {indicator}")
+
+@app.get("/api/alerts")
+def list_alerts(current_user: UserProfile = Depends(get_current_authenticated_user)):
+    """Retrieve active price alerts for authenticated user."""
+    return get_user_alerts(user_id=current_user.id)
+
+@app.post("/api/alerts")
+def add_alert(payload: AlertCreatePayload, current_user: UserProfile = Depends(get_current_authenticated_user)):
+    """Create price alert evaluated against real market prices."""
+    return create_alert(
+        user_id=current_user.id,
+        symbol=payload.symbol,
+        target_price=payload.target_price,
+        condition=payload.condition
+    )
+
+@app.delete("/api/alerts/{alert_id}")
+def remove_alert(alert_id: str, current_user: UserProfile = Depends(get_current_authenticated_user)):
+    """Delete an active price alert."""
+    success = delete_alert(alert_id=alert_id, user_id=current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Alert not found.")
+    return {"status": "success", "message": "Alert deleted"}
 
 # ----------------- MASTER ASSETS (Backward Compatibility) -----------------
 

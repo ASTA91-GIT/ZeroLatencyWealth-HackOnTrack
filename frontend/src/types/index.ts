@@ -1,6 +1,6 @@
 export const ZERO_LATENCY_VERSION = '2.0.0';
 
-export type AssetType = 'EQUITY' | 'BOND' | 'REIT' | 'INVIT' | 'OTHER';
+export type AssetType = 'EQUITY' | 'BOND' | 'REIT' | 'INVIT' | 'INDEX' | 'COMMODITY' | 'CURRENCY' | 'OTHER';
 
 export interface UserProfile {
   id: string;
@@ -110,10 +110,27 @@ export interface MarketOverview {
   };
 }
 
-export interface MarketQuote extends AssetModel {
+export interface MarketQuote extends Partial<AssetModel> {
+  symbol: string;
+  name?: string;
+  exchange?: string;
+  asset_type?: AssetType;
+  last_price?: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  previous_close?: number;
+  change?: number;
+  change_percent?: number;
+  volume?: number;
+  timestamp?: string;
+  market_status?: string;
+  source?: string;
+  is_stale?: boolean;
+  currency?: string;
+  day_52w_high?: number;
+  day_52w_low?: number;
   volume_24h?: string;
-  high_52w?: number;
-  low_52w?: number;
   pe_ratio?: number;
   market_cap?: string;
   dividend_frequency?: string;
@@ -231,3 +248,129 @@ export interface AiHealthResponse {
   status: string;
   error?: string;
 }
+
+export interface CandleData {
+  time: number; // Unix epoch seconds
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume?: number;
+}
+
+export interface MarketDepthItem {
+  price: number;
+  quantity: number;
+  orders: number;
+}
+
+export interface MarketDepthData {
+  symbol: string;
+  bids: MarketDepthItem[];
+  asks: MarketDepthItem[];
+  timestamp: string;
+  is_available: boolean;
+  message?: string;
+}
+
+export interface CompanyFundamentals {
+  symbol: string;
+  company_name?: string;
+  sector?: string;
+  industry?: string;
+  market_cap?: number;
+  pe_ratio?: number;
+  pb_ratio?: number;
+  eps?: number;
+  dividend_yield?: number;
+  roe?: number;
+  roce?: number;
+  debt_to_equity?: number;
+  revenue?: number;
+  net_income?: number;
+  operating_margin?: number;
+  free_cash_flow?: number;
+  description?: string;
+  financial_statements?: {
+    income_statement?: Array<{ year: string; revenue: number; net_income: number; operating_income: number }>;
+    balance_sheet?: Array<{ year: string; total_assets: number; total_debt: number; cash: number }>;
+  };
+  is_available: boolean;
+  message?: string;
+}
+
+export interface MarketNews {
+  id: string;
+  headline: string;
+  source: string;
+  timestamp: string;
+  url?: string;
+  related_symbols?: string[];
+  category: string;
+}
+
+export interface EconomicEvent {
+  event: string;
+  country: string;
+  time: string;
+  importance: string;
+  previous?: string;
+  forecast?: string;
+  actual?: string;
+}
+
+export interface OptionLegData {
+  symbol?: string;
+  ltp: number;
+  change?: number;
+  volume?: number;
+  oi?: number;
+  change_oi?: number;
+  iv?: number;
+}
+
+export interface OptionStrikeRow {
+  strike: number;
+  call?: OptionLegData;
+  put?: OptionLegData;
+}
+
+export interface OptionChainData {
+  symbol: string;
+  underlying_price?: number;
+  expiry_dates: string[];
+  selected_expiry?: string;
+  strikes: OptionStrikeRow[];
+  is_available: boolean;
+  message?: string;
+}
+
+export interface PriceAlert {
+  id: string;
+  user_id: string;
+  symbol: string;
+  target_price: number;
+  condition: string;
+  triggered: boolean;
+  created_at: string;
+}
+
+export interface MarketSessionStatus {
+  exchange: string;
+  status: 'OPEN' | 'CLOSED' | 'PRE-MARKET' | 'POST-MARKET' | 'WEEKEND' | 'HOLIDAY';
+  timestamp: string;
+  is_open: boolean;
+  next_open?: string;
+  next_close?: string;
+}
+
+export interface MarketBreadthData {
+  advances: number;
+  declines: number;
+  unchanged: number;
+  total: number;
+  advance_decline_ratio: number;
+  volume_advancing: number;
+  volume_declining: number;
+}
+
