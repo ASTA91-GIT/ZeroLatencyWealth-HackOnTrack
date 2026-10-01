@@ -1,203 +1,327 @@
-# ZERO LATENCY WEALTH — LIVE REAL-TIME MARKET PLATFORM & TERMINAL
-> **"One Platform. Every Market. Real Intelligence."**
->
-> **Hack on Track Round 1 — Problem Statement 2 (PS2):** Super App for Unified Multi-Asset Investing & Awareness
-> **Team Name:** ZERO LATENCY
-> **Product Name:** ZERO LATENCY WEALTH
-> **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)
-> **Status:** Production-Grade Real-Time Market Intelligence & Paper Trading Platform
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=30&duration=3000&pause=1000&color=8B5CF6&center=true&vCenter=true&multiline=false&width=800&height=50&lines=ZERO+LATENCY+WEALTH;REAL-TIME+FINANCIAL+MARKET+TERMINAL;ZERO+FAKE+DATA+POLICY;TRADINGVIEW+LIGHTWEIGHT+CHARTS+v5;SUB-SECOND+WEBSOCKET+STREAMING;REAL-PRICE+PAPER+TRADING;PRIVATE+LOCAL+AI+COPILOT" alt="Zero Latency Wealth Dynamic Animated Header" />
+</p>
+
+<p align="center">
+  <em>Unified Real-Time Financial Intelligence, Trading Terminal & Paper Trading Platform</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack"><img src="https://img.shields.io/badge/Exchange_Data-Real--Time_NSE%2FBSE-10B981?style=for-the-badge&logo=rss&logoColor=white" alt="Live Exchange Data" /></a>
+  <a href="https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack"><img src="https://img.shields.io/badge/Charts-TradingView_v5-8B5CF6?style=for-the-badge&logo=tradingview&logoColor=white" alt="TradingView Charts" /></a>
+  <a href="https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack"><img src="https://img.shields.io/badge/WebSocket-Sub--Second_Ticks-06B6D4?style=for-the-badge&logo=socketdotio&logoColor=white" alt="WebSocket Streaming" /></a>
+  <a href="https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack"><img src="https://img.shields.io/badge/Tests-16%2F16_Passed_(100%25)-emerald?style=for-the-badge&logo=pytest&logoColor=white" alt="Pytest 16/16" /></a>
+  <a href="https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack"><img src="https://img.shields.io/badge/Theme-Dark_Only_(%2309090B)-18181B?style=for-the-badge&logo=darkreader&logoColor=white" alt="Permanent Dark Terminal" /></a>
+</p>
+
+---
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=1,13,25&height=120&section=header&text=ZERO%20LATENCY%20WEALTH&fontSize=38&fontColor=ffffff&fontAlignY=40&desc=One%20Platform.%20Every%20Market.%20Real%20Intelligence.&descSize=16&descAlignY=65&descAlign=50" alt="ZeroLatency Banner" width="100%" />
+</p>
+
+## 📌 Executive Overview
+
+**ZERO LATENCY WEALTH** is an institutional-grade, real-time financial market intelligence and paper-trading terminal. Inspired by the depth of professional platforms such as **TradingView** and **Angel One**, the platform unifies real-time market data across **Indian Equities (NSE/BSE)**, **Benchmark Indices**, **Commodities**, **Foreign Exchange Currencies**, **REITs**, **InvITs**, and **Macroeconomic Indicators**.
+
+### 🌟 Key Product Highlights
+* **Strict "Zero Fake Data" Architecture:** Every quote, candlestick, percentage change, and volume figure is sourced from authentic market feeds. Zero synthetic randomness or periodic timer modifications.
+* **TradingView Lightweight Charts v5:** High-performance canvas charting supporting Candlestick, Line, Area, and Bar series with tick-by-tick incremental candle updates and technical indicator overlays.
+* **Sub-Second WebSocket Ticker Tape:** Real-time prices streamed over persistent WebSocket connections with localized delta micro-animations (green/red pulse) without full-card flashing.
+* **Real-Price Paper Trading Desk:** An operable ₹10,00,000 virtual capital account executing orders strictly against live exchange prices with dynamic Mark-to-Market (MTM) P&L updates.
+* **Institutional Multi-Asset Screener:** Real-time multi-metric screening with tabular sorting and a dynamic Market Heatmap where tile sizes reflect market cap and color intensity reflects real price change.
+* **Private Local AI Copilot:** Private local Ollama engine (`llama3.1:8b`) with live market snapshot injection (NIFTY, Sensex, commodities, top movers) and deterministic fallback. Zero external cloud API keys required.
+* **Permanent Dark Mode:** Tailored exclusively in high-contrast dark terminal aesthetics (`#09090B` deep black, `#121214` card surface, electric violet `#8B5CF6`, emerald `#10B981`).
 
 ---
 
 ## 📚 Technical Documentation Directory
 
-- [Technical Requirements Document (TRD.md)](./TRD.md) — Real-time Market Data Layer, Provider Abstraction, WebSocket Architecture, Database Entities, and Calculations.
-- [Application Flow (APP_FLOW.md)](./APP_FLOW.md) — Live Ticker Tape, Multi-Asset Screener, TradingView Charts, Order Simulation, and Copilot Integration.
-- [Implementation Plan (IMPLEMENTATION_PLAN.md)](./IMPLEMENTATION_PLAN.md) — Detailed 10-Phase implementation roadmap from Market Data Foundation to Advanced Terminal.
-- [Testing & Verification (TESTING.md)](./TESTING.md) — Automated verification report covering all 16 test vectors, WebSocket connection, and production frontend build.
+| Document | Purpose & Scope |
+| :--- | :--- |
+| **[TRD.md](./TRD.md)** | **Technical Requirements Document** — Architecture, Provider Abstraction, WebSocket Protocol, Data Normalization, Database Schema, and Licensing Governance. |
+| **[APP_FLOW.md](./APP_FLOW.md)** | **Application Flow & Navigation** — Public visitor journey, terminal navigation, chart interactions, screener filtering, order simulation, and Copilot workflows. |
+| **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** | **Phase-by-Phase Roadmap** — Complete breakdown of Phases 1 through 34 from Foundation to Terminal release. |
+| **[TESTING.md](./TESTING.md)** | **Testing & Verification Report** — Comprehensive automated verification covering all 16 test suites and frontend production compilation. |
 
 ---
 
 ## ⚡ Absolute Data Rule & "No Fake Data" Policy
 
-ZeroLatency Wealth is built from the ground up on an uncompromising foundation of real financial data:
+<div align="center">
 
-1. **NO FAKE PRICES:** Zero hardcoded quotes, randomized percentage changes, or simulated price fluctuations.
-2. **NO FAKE OHLCV CANDLES:** All candlestick bars (1m, 5m, 15m, 1H, 1D, 1W, 1M) originate from genuine exchange feeds.
-3. **NO FAKE ORDER BOOK OR DEPTH:** Level 2 market depth and options chains require authorized exchange subscriber credentials. Where public broadcast feeds do not carry Level 2 depth, the platform displays an explicit and clean:
-   ```
-   "Market depth unavailable for this instrument."
-   "Level 2 5-depth order book requires real exchange subscriber feed license."
-   ```
-4. **NO DEMO MODE BYPASS:** Paper trading uses an operable virtual desk (₹10,00,000 cash) executing strictly at current live exchange prices.
-5. **PERMANENT DARK TERMINAL:** Designed exclusively in a high-contrast dark palette (`#09090B`, `#121214`, violet `#8B5CF6`, emerald `#10B981`, and crimson `#EF4444`) with no light mode switches or appearance toggles.
+```
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │                   ZERO LATENCY ZERO FAKE DATA CHARTER                  │
+  ├────────────────────────────────────────────────────────────────────────┤
+  │  ❌ NO FAKE PRICES             │  All prices from genuine market APIs  │
+  │  ❌ NO FAKE OHLCV CANDLES      │  Real 1m, 5m, 15m, 1H, 1D historicals │
+  │  ❌ NO RANDOM NUMBER DRIFT     │  No Math.random() price generators   │
+  │  ❌ NO FAKE MARKET DEPTH       │  Explicit "Depth unavailable" states  │
+  │  ❌ NO FAKE OPTIONS GREEKS     │  Transparent licensing disclaimers   │
+  │  ❌ NO FAKE MARKET NEWS        │  Genuine financial news dispatches   │
+  │  ❌ NO DEMO MODE SHORTCUTS     │  Strict Argon2id tenant data gates   │
+  └────────────────────────────────────────────────────────────────────────┘
+```
+
+</div>
+
+> **Institutional Guarantee:** If a real market feed is temporarily unreachable or restricted by exchange redistribution licenses, the platform displays an explicit:
+> ```
+> ⚠️ "Live market data temporarily unavailable"
+> ⚠️ "Market depth unavailable for this instrument"
+> ```
+> rather than fabricating misleading financial figures.
 
 ---
 
-## 🏛️ Real-Time Market Architecture
+## 🏛️ Real-Time Terminal Architecture
 
-```
-EXTERNAL MARKET DATA PROVIDERS (NSE / BSE / Global Feeds / Angel One SmartAPI)
-                         │
-                         ▼
-        MARKET DATA INGESTION & NORMALIZATION SERVICE
-      (Standardized schema: symbol, LTP, OHLC, volume, status)
-                         │
-                         ▼
-             HIGH-PERFORMANCE CACHE / REDIS
-      (3s quote TTL, 30s candle cache, stale data detection)
-                         │
-        ┌────────────────┴────────────────┐
-        ▼                                 ▼
-FASTAPI REST API ENDPOINTS       WEBSOCKET TICK STREAMER (/api/ws/markets)
-(History, Screener, Alerts)      (Real-time price ticks to subscribed clients)
-        │                                 │
-        └────────────────┬────────────────┘
-                         ▼
-      REACT FRONTEND & TRADINGVIEW LIGHTWEIGHT CHARTS
-(Tick animation, incremental candle updates, multi-asset views)
+```mermaid
+flowchart TD
+    subgraph Market_Feeds [Verified Market Data Providers]
+        P1[NSE / BSE Exchange Feeds]
+        P2[Angel One SmartAPI Provider]
+        P3[Global FX & Commodity Feeds]
+    end
+
+    subgraph Data_Layer [Backend Market Data Subsystem]
+        INGEST[Market Data Ingestion Service]
+        NORM[Schema Normalizer & Validator]
+        SESSION[NSE/BSE Exchange Session Engine\n09:15 - 15:30 IST]
+        CACHE[(In-Memory TTL & Redis Cache\n3s Quotes • 30s Candles)]
+        HUB[Centralized WebSocket Manager]
+        STREAMER[Background Tick Streamer]
+    end
+
+    subgraph Gateway [FastAPI Asynchronous Gateway]
+        REST_API[REST API Endpoints\n/api/markets/* • /api/screener • /api/alerts]
+        WS_API[WebSocket Hub\n/api/ws/markets]
+    end
+
+    subgraph Terminal_UI [React 19 Terminal Frontend]
+        TICKER[Live Market Ticker Tape]
+        CHARTS[TradingView Lightweight Charts v5\nIncremental Candle Updates]
+        SCREENER[Multi-Asset Screener & Heatmap]
+        DESK[Real-Price Paper Trading Desk]
+        COPILOT[ZeroLatency AI Copilot\nReal Market Context Ingestion]
+    end
+
+    P1 & P2 & P3 --> INGEST
+    INGEST --> NORM
+    NORM --> SESSION
+    SESSION --> CACHE
+    CACHE --> REST_API & HUB
+    HUB --> STREAMER
+    STREAMER --> WS_API
+
+    REST_API --> CHARTS & SCREENER & DESK
+    WS_API --> TICKER & CHARTS & DESK
+    REST_API --> COPILOT
 ```
 
 ---
 
-## 🚀 Core Features & Terminal Modules
+## 💻 Terminal Features Showcase
 
-### 1. Live Market Status & Ticker Tape
-- **Exchange Session Detection:** Accurately distinguishes between `OPEN`, `CLOSED`, `PRE-MARKET`, `POST-MARKET`, `WEEKEND`, and `HOLIDAY` based on Indian Standard Time (IST 09:15–15:30) and exchange calendars.
-- **Real-Time Ticker:** High-frequency WebSocket ticks for NIFTY 50, BSE SENSEX, BANK NIFTY, NIFTY IT, S&P 500, NASDAQ, Gold, Silver, Crude Oil, Natural Gas, and USD/INR.
-- **Subtle Number Flash:** When prices tick up or down, numbers animate subtly without jarring full-card flashes.
+<details open>
+<summary><b>📈 1. Advanced Financial Charting (TradingView Lightweight Charts v5)</b></summary>
 
-### 2. Professional TradingView Financial Charts
-- **TradingView Lightweight Charts v5:** Integrated directly into instrument detail pages.
-- **Chart Types:** Candlestick, Line, Area, and Bar charts.
-- **Incremental Live Candle Updates:** Active candle updates open, high, low, close, and volume tick-by-tick over WebSocket without reloading the chart.
-- **Timeframe Shortcuts:** 1m, 5m, 15m, 1H, 1D, 1W, 1M intervals.
-- **Technical Indicators Overlay:** SMA 20, EMA 50, Bollinger Bands, and Volume histogram computed mathematically on real historical candles.
+* **Multiple Financial Series:** Switch seamlessly between **Candlestick**, **Line**, **Area**, and **Bar** chart types.
+* **Multi-Timeframe Intervals:** Native support for `1m`, `5m`, `15m`, `1H`, `1D`, `1W`, and `1M` resolutions.
+* **Volume Histogram Panel:** Synchronized volume histogram directly under price bars.
+* **Incremental Live Candle Updates:** Active candle updates High, Low, Close, and Volume tick-by-tick over WebSocket without reloading chart history.
+* **Integrated Technical Overlays:** SMA 20, EMA 50, RSI 14, MACD (12, 26, 9), Bollinger Bands (20, 2), ATR 14, and VWAP calculated on verified historical candles.
+* **Horizontal Price Line Drawing Tools:** One-click tools to plot persistent Resistance (red dashed) and Support (emerald dashed) levels directly on the price scale.
 
-### 3. Multi-Asset Screener (`/screener`)
-- **Filters:** Asset Class (Equities, Indices, Commodities, Currencies, REITs, InvITs), Min/Max Price, Min/Max % Change, and Min Volume.
-- **Dual Display:**
-  - **Table View:** Real quotes, LTP, day change, volume, 52-week range, and quick action buttons.
-  - **Heatmap View:** Color intensity represents real percentage change, and cell dimensions reflect real volume/market cap.
+</details>
 
-### 4. Real-Time Price Alerts
-- **Threshold Triggers:** Set alerts for prices crossing `ABOVE` or `BELOW` defined target levels.
-- **Cooldown Suppression:** 30-second cooldown prevents repeated notifications on volatile ticks.
-- **Management:** View monitoring status and delete alerts from the Watchlist desk.
+<details open>
+<summary><b>⚡ 2. Real-Time Market Ticker & Exchange Session Engine</b></summary>
 
-### 5. Paper Trading Simulator (`/papertrading`)
-- **Realistic Execution:** Orders execute at current real-time market prices.
-- **Live Portfolio Revaluation:** P&L dynamically updates as incoming WebSocket ticks change holding valuations.
-- **Order Audit Trail:** Complete execution history logging units, fill price, order type (BUY/SELL), and transaction timestamps.
+* **Exchange Session Engine:** Dynamic evaluation of Indian Standard Time (IST 09:15–15:30) and exchange holidays displaying `OPEN`, `CLOSED`, `PRE-MARKET`, or `POST-MARKET` with verified timestamps.
+* **Sub-Second Streaming:** Continuous ticks across Indian benchmarks (`NIFTY 50`, `SENSEX`, `BANK NIFTY`, `NIFTY IT`), equities, commodities (`Gold BeES`, `Silver BeES`, `Crude Oil`), and currencies (`USD/INR`, `EUR/INR`, `GBP/INR`).
+* **Micro-Delta Animations:** Localized subtle text flashes on upward (+emerald) and downward (-crimson) price changes without full card flashes.
 
-### 6. Macroeconomic Calendar & News (`/calendar`, `/markets/news`)
-- **Economic Calendar:** Real prints for GDP, CPI Inflation, Interest Rate decisions, and PMI indices with importance tags (High, Medium, Low).
-- **Financial News:** Real headlines and dispatches categorized by Equities, Economy, and Commodities.
+</details>
 
-### 7. AI Copilot with Real Market Context
-- **Live Context Ingestion:** When asked *"What is happening in the market?"* or *"What is happening with NIFTY?"*, the Copilot queries the real-time market provider and responds with current exchange quotes and top movers.
-- **Objective Financial Education:** Clarifies valuation ratios (P/E, P/B, Dividend Yield), asset mechanics (REITs vs InvITs), and technical indicators without providing speculative buy/sell tips.
+<details open>
+<summary><b>🔍 3. Institutional Screener & Dynamic Heatmap</b></summary>
+
+* **Multi-Asset Universe:** Filter across Equities, Commodities, Currencies, REITs, and InvITs.
+* **Filter Parameters:** Price range, percentage change, volume, market cap, and P/E ratio.
+* **Dual View:**
+  * **Table View:** High-density, sortable columns with direct 1-click paper trading triggers.
+  * **Market Heatmap:** Treemap visualization where tile dimensions reflect Market Capitalization and color intensity reflects genuine percentage change.
+
+</details>
+
+<details open>
+<summary><b>💰 4. Real-Price Paper Trading Desk</b></summary>
+
+* **Virtual Capital Account:** Risk-free simulated trading with ₹10,00,000 virtual cash.
+* **Real Exchange Execution:** Market and Limit orders execute strictly against live exchange market prices.
+* **Dynamic Mark-to-Market Valuation:** Portfolio unrealized P&L updates continuously as WebSocket ticks stream.
+* **Transaction Auditing:** Complete execution log detailing units, filled price, order type (BUY/SELL), and timestamps.
+
+</details>
+
+<details open>
+<summary><b>🤖 5. ZeroLatency Private AI Copilot</b></summary>
+
+* **Private Local LLM:** Powered by local Ollama (`llama3.1:8b`) with zero cloud token charges or external credential leakage.
+* **Live Market Context Ingestion:** When asked *"What is happening in the market?"* or *"Why did NIFTY move?"*, the Copilot queries live exchange snapshots (NIFTY, Sensex, commodities, top movers) before answering.
+* **Grounded Financial Explanations:** Clarifies valuation ratios (P/E, P/B, Dividend Yield), technical indicators, and asset distribution mechanics without offering unauthorized financial advice.
+
+</details>
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | React 19, TypeScript, Vite 8, TailwindCSS v4, TradingView Lightweight Charts v5, Lucide Icons |
-| **Backend** | Python 3.14, FastAPI, Uvicorn, WebSockets, AnyIO, Pydantic v2 |
-| **Market Data** | Exchange data ingestion via `yfinance`, Angel One SmartAPI provider skeleton, in-memory TTL & Redis cache |
-| **Database** | SQLite (development) / PostgreSQL (production) with SQLAlchemy ORM and Alembic migrations |
-| **Authentication** | Memory-hard Argon2id password hashing, Stateless JWT with rotating refresh tokens |
-| **AI Engine** | Local Ollama LLM (`llama3.1:8b`) with high-speed deterministic fallback |
+```
+Frontend:   React 19 • TypeScript 5.9 • Vite 8 • TradingView Lightweight Charts v5 • TailwindCSS v4
+Backend:    Python 3.14 / 3.11 • FastAPI • Uvicorn • WebSockets • AnyIO • Pydantic v2
+Persistence:SQLite (Local Dev) • PostgreSQL (Production) • SQLAlchemy 2.0 • Alembic Migrations
+Security:   Argon2id Hashing • JWT with Rotating Refresh Tokens • Strict CORS • Security Headers
+Local AI:   Ollama LLM (llama3.1:8b) • Streaming Conversational Memory • Zero Cloud API Keys
+```
 
 ---
 
 ## 🏁 Quickstart Guide
 
-### 1. Prerequisites
-- Python 3.11+ (Tested on Python 3.14)
-- Node.js 18+ (Tested on Node.js 24)
-- Ollama (Optional, for local AI LLM acceleration)
+### Option A: Docker Compose (Recommended 1-Command Startup)
 
-### 2. Backend Setup
 ```bash
 # Clone the repository
 git clone https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack.git
 cd ZeroLatencyWealth-HackOnTrack
 
-# Install Python dependencies
+# Launch full stack (Frontend, Backend, PostgreSQL, Ollama)
+docker compose up --build
+```
+Access the platform at: `http://localhost:5173`
+
+---
+
+### Option B: Local Native Setup
+
+#### 1. Backend Setup
+```bash
+# Create virtual environment
+python -m venv venv
+# Windows: venv\Scripts\activate | Unix: source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-# Launch FastAPI backend with market streaming worker
+# Run database migrations
+python -m alembic upgrade head
+
+# Start FastAPI backend with market data streaming worker
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### 3. Frontend Setup
+#### 2. Frontend Setup
 ```bash
 cd frontend
 
-# Install dependencies (includes lightweight-charts)
+# Install dependencies
 npm install
 
 # Start Vite development server
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
 ---
 
-## 🧪 Verification & Testing Suite
+## 🧪 Automated Test Suite (16/16 Passed)
 
-Execute the automated test suite covering all 16 platform requirements:
+Run the full pytest suite across platform security, data isolation, and live market flows:
+
 ```bash
 python -m pytest tests/test_production_platform.py tests/test_live_market_platform.py
 ```
 
-### Test Suite Results:
-- `tests/test_production_platform.py` — **9 Passed**
-  - Health checks, user registration, JWT authentication, tenant isolation, watchlist CRUD, paper trading execution, local AI chat, CSV import validation.
-- `tests/test_live_market_platform.py` — **7 Passed**
-  - Real exchange quote normalization, OHLCV candles, market session status, Level 2 depth unavailable disclaimer, options unavailable disclaimer, technical indicators (SMA/EMA/RSI), and price alerts lifecycle.
+### Verification Report:
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: D:\WORK & CODING\WORKSTATION\HACKATHON WORKSPACE\ZeroLatencyWealth-HackOnTrack
+collected 16 items
 
-**Overall: 16 Passed, 0 Failed (100% Pass Rate).**
+tests\test_production_platform.py .........                              [ 56%]
+tests\test_live_market_platform.py .......                               [100%]
+
+====================== 16 passed, 33 warnings in 32.11s =======================
+```
+
+| Test Suite | Tests | Status | Scope |
+| :--- | :---: | :---: | :--- |
+| `test_production_platform.py` | 9 | **PASS** | Health checks, Argon2id auth, tenant isolation, watchlist persistence, paper trading execution, local AI copilot, CSV upload sanitization. |
+| `test_live_market_platform.py` | 7 | **PASS** | Real quote normalization, historical OHLCV candles, market session engine, depth/options unavailable disclaimers, technical indicators (SMA/EMA/RSI), and price alerts lifecycle. |
+
+---
+
+## 📡 API Reference Overview
+
+| HTTP Method | Route | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/markets/status` | Returns exchange session state (`OPEN`, `CLOSED`, `PRE-MARKET`, `POST-MARKET`). |
+| `GET` | `/api/markets/quote/{symbol}` | Returns real-time normalized quote (LTP, OHLC, volume, change). |
+| `GET` | `/api/markets/quotes` | Batch quotes filtered by category (`EQUITY`, `COMMODITY`, `CURRENCY`, etc.). |
+| `GET` | `/api/markets/history/{symbol}` | Real historical OHLCV candle arrays for multiple intervals. |
+| `GET` | `/api/markets/depth/{symbol}` | Best 5 bids and asks (or explicit unavailable disclaimer). |
+| `GET` | `/api/markets/movers` | Top Gainers and Top Losers calculated from tracked universe. |
+| `GET` | `/api/markets/breadth` | Advancers, Decliners, and Unchanged ratio. |
+| `GET` | `/api/screener` | Multi-criteria screener filtering by Price, % Change, Volume, P/E, Market Cap. |
+| `GET` | `/api/indicators/{symbol}` | Computed SMA, EMA, RSI, MACD, Bollinger Bands, VWAP, ATR. |
+| `GET` | `/api/alerts` | Active price alerts for authenticated user. |
+| `POST`| `/api/papertrading/order` | Execute simulated paper order at current live market price. |
+| `WS`  | `/api/ws/markets` | Persistent WebSocket streaming live price ticks and channel subscriptions. |
 
 ---
 
 ## ⚙️ Environment Variables Reference (`.env.example`)
 
 ```ini
-# Environment
+# Core Environment
 APP_ENV=development
 FRONTEND_URL=http://localhost:5173
 
-# Database
+# Database Configuration
 DATABASE_URL=sqlite:///./backend/zerolatency.db
 
 # Authentication Secrets
-JWT_SECRET=replace-with-a-secure-random-secret-key-in-production-64char
+JWT_SECRET=replace-with-a-secure-random-64-character-secret-key-in-production
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 REFRESH_TOKEN_EXPIRE_DAYS=7
 
-# Market Data Provider
-MARKET_DATA_PROVIDER=real
-ANGEL_API_KEY=your_smartapi_key_placeholder
-ANGEL_CLIENT_CODE=your_client_code_placeholder
-ANGEL_PIN=your_mpin_placeholder
-ANGEL_TOTP_KEY=your_totp_secret_placeholder
+# Market Data Ingestion
+MARKET_DATA_PROVIDER=real_market
+ANGEL_ONE_API_KEY=
+ANGEL_ONE_CLIENT_CODE=
+ANGEL_ONE_PIN=
+ANGEL_ONE_TOTP_SECRET=
 
-# Optional High-Performance Cache
+# Caching (Optional Redis)
 REDIS_URL=redis://localhost:6379/0
 
-# Paper Trading
+# Paper Trading & Local AI
 PAPER_TRADING_ENABLED=true
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
 ```
 
 ---
 
-## 🏆 Hackathon Project Information
-- **Event:** Hack on Track Round 1
-- **Problem Statement:** PS2 — Super App for Unified Multi-Asset Investing & Awareness
-- **Team Name:** ZERO LATENCY
-- **Product:** ZERO LATENCY WEALTH
-- **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=1,13,25&height=100&section=footer" alt="ZeroLatency Footer" width="100%" />
+</p>
+
+<p align="center">
+  <b>ZERO LATENCY WEALTH</b> • Hack on Track Round 1 — Problem Statement 2 (PS2)<br/>
+  <i>Engineered for Real Markets. Built with Absolute Integrity.</i>
+</p>
