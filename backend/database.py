@@ -1,265 +1,243 @@
-import sqlite3
 import os
-from datetime import datetime
+import sqlite3
+from typing import Generator
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from backend.db_models import (
+    Base, DBUser, DBAsset, DBHolding, DBTransaction, DBGoal,
+    DBPortfolioSnapshot, DBPaperAccount
+)
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "zerolatency.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    # Use SQLite file path by default
+    DATABASE_URL = f"sqlite:///{DB_PATH}"
+
+# Connect args for SQLite
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    pool_pre_ping=True
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    """Backward-compatible raw connection provider for existing query pipelines."""
+    if DATABASE_URL.startswith("sqlite"):
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
+    else:
+        # Fallback raw connection from engine
+        return engine.raw_connection()
 
 def init_db():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.executescript("""
-    CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        name TEXT NOT NULL,
-        password_hash TEXT NOT NULL,
-        is_demo INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS assets (
-        id TEXT PRIMARY KEY,
-        symbol TEXT UNIQUE NOT NULL,
-        name TEXT NOT NULL,
-        asset_type TEXT NOT NULL, -- EQUITY, BOND, REIT, INVIT, OTHER
-        category TEXT,
-        sector TEXT,
-        description TEXT,
-        risk_level TEXT, -- Low, Moderate, Moderate-High, High
-        annual_yield REAL DEFAULT 0.0,
-        liquidity_score TEXT, -- High, Moderate, Low
-        price REAL NOT NULL,
-        change_24h REAL DEFAULT 0.0
-    );
-
-    CREATE TABLE IF NOT EXISTS holdings (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        asset_id TEXT NOT NULL,
-        source TEXT NOT NULL, -- Broker A, Broker B, Depository, Imported CSV
-        units REAL NOT NULL,
-        avg_buy_price REAL NOT NULL,
-        current_price REAL NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id),
-        FOREIGN KEY(asset_id) REFERENCES assets(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS transactions (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        asset_id TEXT NOT NULL,
-        type TEXT NOT NULL, -- BUY, DIVIDEND, INTEREST, DISTRIBUTION
-        units REAL,
-        price REAL,
-        amount REAL NOT NULL,
-        date TEXT NOT NULL,
-        source TEXT NOT NULL,
-        FOREIGN KEY(user_id) REFERENCES users(id),
-        FOREIGN KEY(asset_id) REFERENCES assets(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS goals (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        category TEXT NOT NULL, -- Emergency, Education, Travel, Home, Retirement
-        target_amount REAL NOT NULL,
-        current_amount REAL NOT NULL,
-        time_period TEXT NOT NULL,
-        icon TEXT DEFAULT 'target',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS portfolio_snapshots (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        date TEXT NOT NULL,
-        total_value REAL NOT NULL,
-        invested_value REAL NOT NULL,
-        equity_val REAL NOT NULL,
-        bond_val REAL NOT NULL,
-        reit_val REAL NOT NULL,
-        invit_val REAL NOT NULL,
-        other_val REAL NOT NULL,
-        FOREIGN KEY(user_id) REFERENCES users(id)
-    );
-    """)
-    conn.commit()
-    conn.close()
+    """Initialize all schema tables using SQLAlchemy ORM Base and apply lightweight column migrations."""
+    Base.metadata.create_all(bind=engine)
+    try:
+        if DATABASE_URL.startswith("sqlite"):
+            conn = get_connection()
+            cursor = conn.cursor()
+            user_cols = [c[1] for c in cursor.execute("PRAGMA table_info(users)").fetchall()]
+            if "email_verified" not in user_cols:
+                cursor.execute("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT 0")
+                conn.commit()
+            conn.close()
+    except Exception as ex:
+        print("Notice: migration check warning:", ex)
 
 def seed_demo_data(force=False):
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    if not force:
-        cursor.execute("SELECT COUNT(*) FROM users WHERE id = 'demo-user-001'")
-        if cursor.fetchone()[0] > 0:
-            conn.close()
+    """Seed benchmark demo assets, portfolio, goals, and paper trading cash for demo-user-001."""
+    db: Session = SessionLocal()
+    try:
+        # Check if demo user already exists
+        existing_demo = db.query(DBUser).filter(DBUser.id == "demo-user-001").first()
+        if existing_demo and not force:
             return
 
-    # Clear existing demo user data if force
-    cursor.execute("DELETE FROM holdings WHERE user_id = 'demo-user-001'")
-    cursor.execute("DELETE FROM transactions WHERE user_id = 'demo-user-001'")
-    cursor.execute("DELETE FROM goals WHERE user_id = 'demo-user-001'")
-    cursor.execute("DELETE FROM portfolio_snapshots WHERE user_id = 'demo-user-001'")
-    cursor.execute("DELETE FROM users WHERE id = 'demo-user-001'")
+        # Clear existing demo user data if force
+        if existing_demo:
+            db.query(DBHolding).filter(DBHolding.user_id == "demo-user-001").delete()
+            db.query(DBTransaction).filter(DBTransaction.user_id == "demo-user-001").delete()
+            db.query(DBGoal).filter(DBGoal.user_id == "demo-user-001").delete()
+            db.query(DBPortfolioSnapshot).filter(DBPortfolioSnapshot.user_id == "demo-user-001").delete()
+            db.query(DBPaperAccount).filter(DBPaperAccount.user_id == "demo-user-001").delete()
+            db.query(DBUser).filter(DBUser.id == "demo-user-001").delete()
+            db.commit()
 
-    # Insert Demo User
-    cursor.execute("""
-    INSERT OR REPLACE INTO users (id, email, name, password_hash, is_demo)
-    VALUES ('demo-user-001', 'demo@zerolatency.invest', 'Alex Mercer', 'demo_hash_token_secure', 1)
-    """)
+        # Seed Demo User
+        demo_user = DBUser(
+            id="demo-user-001",
+            email="demo@zerolatency.invest",
+            name="Alex Mercer",
+            password_hash="$argon2id$v=19$m=65536,t=3,p=4$qFq8zY0v8zZ6Q...$demo_argon_hash",
+            is_demo=1,
+            email_verified=True
+        )
+        db.add(demo_user)
 
-    # Seed Master Assets
-    assets_data = [
-        # EQUITIES (52% Target ~ ₹4,38,100)
-        ("EQ01", "NIFTYBEES", "Nippon India Nifty 50 ETF", "EQUITY", "Index ETF", "Broad Market",
-         "Passive ETF tracking India's premier top 50 bluechip companies across financial services, IT, oil & gas, FMCG.", "Moderate", 1.2, "High", 262.50, 0.85),
-        ("EQ02", "TCS", "Tata Consultancy Services (Demo)", "EQUITY", "Large Cap Tech", "Information Technology",
-         "India's largest IT services exporter providing digital transformation, cloud, and engineering services globally.", "Moderate", 2.1, "High", 3890.00, -0.42),
-        ("EQ03", "HDFCBANK", "HDFC Bank Ltd (Demo)", "EQUITY", "Private Bank", "Banking & Finance",
-         "Leading private sector bank offering retail, corporate banking and treasury operations.", "Moderate", 1.1, "High", 1680.00, 1.15),
-        ("EQ04", "RELIANCE", "Reliance Industries Ltd (Demo)", "EQUITY", "Conglomerate", "Energy & Telecom",
-         "Diversified conglomerate spanning refining, petrochemicals, telecommunications (Jio) and retail.", "Moderate-High", 0.8, "High", 2940.00, 0.65),
+        # Seed Paper Trading Account for Demo User with ₹10,00,000
+        paper_acc = DBPaperAccount(
+            id="PA_demo-user-001",
+            user_id="demo-user-001",
+            cash_balance=1000000.0,
+            currency="INR"
+        )
+        db.add(paper_acc)
 
-        # BONDS (18% Target ~ ₹1,51,650)
-        ("BD01", "GS2033-718", "7.18% GS 2033 Sovereign Bond", "BOND", "Government Securities", "Sovereign Debt",
-         "10-year central government sovereign bond offering semi-annual coupon payments backed by the Reserve Bank of India.", "Low", 7.18, "Moderate", 101.40, 0.05),
-        ("BD02", "NABARD-AAA", "NABARD 7.65% Infra Bond 2029", "BOND", "Public Financial Institution", "Development Finance",
-         "AAA-rated institutional bond supporting rural agricultural infrastructure with steady fixed coupon income.", "Low", 7.65, "Moderate", 102.50, 0.02),
-        ("BD03", "LT-DEB-2028", "L&T Finance 8.15% NCD 2028", "BOND", "Corporate Debt", "Financial Services",
-         "High-rated corporate Non-Convertible Debenture providing higher yields with quarterly interest distribution.", "Moderate", 8.15, "Moderate-Low", 1005.00, -0.10),
+        # Master Assets
+        assets_data = [
+            # EQUITIES
+            {"id": "EQ01", "symbol": "NIFTYBEES", "name": "Nippon India Nifty 50 ETF", "asset_type": "EQUITY",
+             "category": "Index ETF", "sector": "Broad Market",
+             "description": "Passive ETF tracking India's premier top 50 bluechip companies across financial services, IT, oil & gas, FMCG.",
+             "risk_level": "Moderate", "annual_yield": 1.2, "liquidity_score": "High", "price": 262.50, "change_24h": 0.85},
+            {"id": "EQ02", "symbol": "TCS", "name": "Tata Consultancy Services (Demo)", "asset_type": "EQUITY",
+             "category": "Large Cap Tech", "sector": "Information Technology",
+             "description": "India's largest IT services exporter providing digital transformation, cloud, and engineering services globally.",
+             "risk_level": "Moderate", "annual_yield": 2.1, "liquidity_score": "High", "price": 3890.00, "change_24h": -0.42},
+            {"id": "EQ03", "symbol": "HDFCBANK", "name": "HDFC Bank Ltd (Demo)", "asset_type": "EQUITY",
+             "category": "Private Bank", "sector": "Banking & Finance",
+             "description": "Leading private sector bank offering retail, corporate banking and treasury operations.",
+             "risk_level": "Moderate", "annual_yield": 1.1, "liquidity_score": "High", "price": 1680.00, "change_24h": 1.15},
+            {"id": "EQ04", "symbol": "RELIANCE", "name": "Reliance Industries Ltd (Demo)", "asset_type": "EQUITY",
+             "category": "Conglomerate", "sector": "Energy & Telecom",
+             "description": "Diversified conglomerate spanning refining, petrochemicals, telecommunications (Jio) and retail.",
+             "risk_level": "Moderate-High", "annual_yield": 0.8, "liquidity_score": "High", "price": 2940.00, "change_24h": 0.65},
 
-        # REITS (15% Target ~ ₹1,26,375)
-        ("RT01", "EMBASSY", "Embassy Office Parks REIT", "REIT", "Commercial Real Estate", "Real Estate Office Parks",
-         "India's first publicly listed REIT owning and operating 45.4 msf of premier Grade-A commercial office space leased to top Fortune 500 multinationals.", "Moderate", 6.80, "Moderate", 375.00, 0.90),
-        ("RT02", "MINDSPACE", "Mindspace Business Parks REIT", "REIT", "Commercial Tech Parks", "Real Estate Tech Parks",
-         "Quality commercial business parks situated in key technology micro-markets like Mumbai, Hyderabad, Pune, and Chennai.", "Moderate", 6.95, "Moderate", 335.50, 0.45),
-        ("RT03", "BROOKFIELD", "Brookfield India Real Estate Trust", "REIT", "Institutional Real Estate", "Real Estate Office Parks",
-         "100% institutionally managed real estate investment trust with marquee multinational tenant leases.", "Moderate-High", 7.40, "Moderate", 265.00, -0.20),
+            # BONDS
+            {"id": "BD01", "symbol": "GS2033-718", "name": "7.18% GS 2033 Sovereign Bond", "asset_type": "BOND",
+             "category": "Government Securities", "sector": "Sovereign Debt",
+             "description": "10-year central government sovereign bond offering semi-annual coupon payments backed by the Reserve Bank of India.",
+             "risk_level": "Low", "annual_yield": 7.18, "liquidity_score": "Moderate", "price": 101.40, "change_24h": 0.05},
+            {"id": "BD02", "symbol": "NABARD-AAA", "name": "NABARD 7.65% Infra Bond 2029", "asset_type": "BOND",
+             "category": "Public Financial Institution", "sector": "Development Finance",
+             "description": "AAA-rated institutional bond supporting rural agricultural infrastructure with steady fixed coupon income.",
+             "risk_level": "Low", "annual_yield": 7.65, "liquidity_score": "Moderate", "price": 102.50, "change_24h": 0.02},
+            {"id": "BD03", "symbol": "LT-DEB-2028", "name": "L&T Finance 8.15% NCD 2028", "asset_type": "BOND",
+             "category": "Corporate Debt", "sector": "Financial Services",
+             "description": "High-rated corporate Non-Convertible Debenture providing higher yields with quarterly interest distribution.",
+             "risk_level": "Moderate", "annual_yield": 8.15, "liquidity_score": "Moderate-Low", "price": 1005.00, "change_24h": -0.10},
 
-        # INVITS (10% Target ~ ₹84,250)
-        ("IN01", "PGINVIT", "PowerGrid Infrastructure Trust", "INVIT", "Power Transmission", "Infrastructure & Utilities",
-         "Backed by Power Grid Corp, owns and operates 5 operational interstate power transmission projects with regulated stable cash flows.", "Moderate-Low", 10.40, "Moderate", 101.20, 0.30),
-        ("IN02", "IRBINVIT", "IRB InvIT Fund", "INVIT", "Highways & Toll Roads", "Roads & Highways",
-         "Infrastructure investment trust owning revenue-generating toll-road assets across national highway corridors.", "Moderate-High", 9.80, "Moderate-Low", 64.50, -0.75),
+            # REITS
+            {"id": "RT01", "symbol": "EMBASSY", "name": "Embassy Office Parks REIT", "asset_type": "REIT",
+             "category": "Commercial Real Estate", "sector": "Real Estate Office Parks",
+             "description": "India's first publicly listed REIT owning and operating 45.4 msf of premier Grade-A commercial office space leased to top Fortune 500 multinationals.",
+             "risk_level": "Moderate", "annual_yield": 6.80, "liquidity_score": "Moderate", "price": 375.00, "change_24h": 0.90},
+            {"id": "RT02", "symbol": "MINDSPACE", "name": "Mindspace Business Parks REIT", "asset_type": "REIT",
+             "category": "Commercial Tech Parks", "sector": "Real Estate Tech Parks",
+             "description": "Quality commercial business parks situated in key technology micro-markets like Mumbai, Hyderabad, Pune, and Chennai.",
+             "risk_level": "Moderate", "annual_yield": 6.95, "liquidity_score": "Moderate", "price": 335.50, "change_24h": 0.45},
+            {"id": "RT03", "symbol": "BROOKFIELD", "name": "Brookfield India Real Estate Trust", "asset_type": "REIT",
+             "category": "Institutional Real Estate", "sector": "Real Estate Office Parks",
+             "description": "100% institutionally managed real estate investment trust with marquee multinational tenant leases.",
+             "risk_level": "Moderate-High", "annual_yield": 7.40, "liquidity_score": "Moderate", "price": 265.00, "change_24h": -0.20},
 
-        # OTHER / CASH / TREASURY (5% Target ~ ₹42,125)
-        ("OT01", "LIQUIDBEES", "Nippon India ETF Liquid BeES", "OTHER", "Money Market", "Cash Equivalents",
-         "Daily dividend payout liquid ETF parking surplus funds in overnight collateralized borrowing & lending obligations.", "Very Low", 6.20, "High", 1000.00, 0.01)
-    ]
+            # INVITS
+            {"id": "IN01", "symbol": "PGINVIT", "name": "PowerGrid Infrastructure Trust", "asset_type": "INVIT",
+             "category": "Power Transmission", "sector": "Infrastructure & Utilities",
+             "description": "Backed by Power Grid Corp, owns and operates 5 operational interstate power transmission projects with regulated stable cash flows.",
+             "risk_level": "Moderate-Low", "annual_yield": 10.40, "liquidity_score": "Moderate", "price": 101.20, "change_24h": 0.30},
+            {"id": "IN02", "symbol": "IRBINVIT", "name": "IRB InvIT Fund", "asset_type": "INVIT",
+             "category": "Highways & Toll Roads", "sector": "Roads & Highways",
+             "description": "Infrastructure investment trust owning revenue-generating toll-road assets across national highway corridors.",
+             "risk_level": "Moderate-High", "annual_yield": 9.80, "liquidity_score": "Moderate-Low", "price": 64.50, "change_24h": -0.75},
 
-    for item in assets_data:
-        cursor.execute("""
-        INSERT OR REPLACE INTO assets 
-        (id, symbol, name, asset_type, category, sector, description, risk_level, annual_yield, liquidity_score, price, change_24h)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, item)
+            # OTHER / CASH
+            {"id": "OT01", "symbol": "LIQUIDBEES", "name": "Nippon India ETF Liquid BeES", "asset_type": "OTHER",
+             "category": "Money Market", "sector": "Cash Equivalents",
+             "description": "Daily dividend payout liquid ETF parking surplus funds in overnight collateralized borrowing & lending obligations.",
+             "risk_level": "Very Low", "annual_yield": 6.20, "liquidity_score": "High", "price": 1000.00, "change_24h": 0.01}
+        ]
 
-    # Seed Holdings to closely achieve:
-    # Total Invested: ₹7,95,000, Total Value: ₹8,42,500, Unrealized P/L: ₹47,500 (+5.97%)
-    # Equities: ~₹4,38,100 (52%)
-    # Bonds:    ~₹1,51,650 (18%)
-    # REITs:    ~₹1,26,375 (15%)
-    # InvITs:   ~₹84,250  (10%)
-    # Other:    ~₹42,125  (5%)
-    holdings_data = [
-        # (id, user_id, asset_id, source, units, avg_buy_price, current_price)
-        # EQUITIES total: 175,875 + 116,700 + 84,000 + 61,740 = 438,315 (~52%)
-        ("H01", "demo-user-001", "EQ01", "Broker A", 670, 248.00, 262.50),  # Buy: 166,160 -> Cur: 175,875 (P/L: +9,715)
-        ("H02", "demo-user-001", "EQ02", "Broker B", 30, 3720.00, 3890.00), # Buy: 111,600 -> Cur: 116,700 (P/L: +5,100)
-        ("H03", "demo-user-001", "EQ03", "Depository", 50, 1610.00, 1680.00),# Buy: 80,500 -> Cur: 84,000 (P/L: +3,500)
-        ("H04", "demo-user-001", "EQ04", "Broker A", 21, 2810.00, 2940.00), # Buy: 59,010 -> Cur: 61,740 (P/L: +2,730)
+        for item in assets_data:
+            existing_asset = db.query(DBAsset).filter(DBAsset.id == item["id"]).first()
+            if not existing_asset:
+                db.add(DBAsset(**item))
+            else:
+                for k, v in item.items():
+                    setattr(existing_asset, k, v)
 
-        # BONDS total: 70,980 + 51,250 + 30,150 = 152,380 (~18%)
-        ("H05", "demo-user-001", "BD01", "Depository", 700, 99.80, 101.40), # Buy: 69,860 -> Cur: 70,980 (P/L: +1,120)
-        ("H06", "demo-user-001", "BD02", "Broker B", 500, 100.50, 102.50),  # Buy: 50,250 -> Cur: 51,250 (P/L: +1,000)
-        ("H07", "demo-user-001", "BD03", "Imported CSV", 30, 980.00, 1005.00),# Buy: 29,400 -> Cur: 30,150 (P/L: +750)
+        # Seed Benchmark Holdings (~₹8,42,500 value, ₹7,95,000 invested)
+        holdings_data = [
+            {"id": "H01", "user_id": "demo-user-001", "asset_id": "EQ01", "source": "Broker A", "units": 670, "avg_buy_price": 248.00, "current_price": 262.50},
+            {"id": "H02", "user_id": "demo-user-001", "asset_id": "EQ02", "source": "Broker B", "units": 30, "avg_buy_price": 3720.00, "current_price": 3890.00},
+            {"id": "H03", "user_id": "demo-user-001", "asset_id": "EQ03", "source": "Depository", "units": 50, "avg_buy_price": 1610.00, "current_price": 1680.00},
+            {"id": "H04", "user_id": "demo-user-001", "asset_id": "EQ04", "source": "Broker A", "units": 21, "avg_buy_price": 2810.00, "current_price": 2940.00},
+            {"id": "H05", "user_id": "demo-user-001", "asset_id": "BD01", "source": "Depository", "units": 700, "avg_buy_price": 99.80, "current_price": 101.40},
+            {"id": "H06", "user_id": "demo-user-001", "asset_id": "BD02", "source": "Broker B", "units": 500, "avg_buy_price": 100.50, "current_price": 102.50},
+            {"id": "H07", "user_id": "demo-user-001", "asset_id": "BD03", "source": "Imported CSV", "units": 30, "avg_buy_price": 980.00, "current_price": 1005.00},
+            {"id": "H08", "user_id": "demo-user-001", "asset_id": "RT01", "source": "Broker A", "units": 160, "avg_buy_price": 342.00, "current_price": 375.00},
+            {"id": "H09", "user_id": "demo-user-001", "asset_id": "RT02", "source": "Broker B", "units": 120, "avg_buy_price": 310.00, "current_price": 335.50},
+            {"id": "H10", "user_id": "demo-user-001", "asset_id": "RT03", "source": "Imported CSV", "units": 95, "avg_buy_price": 245.00, "current_price": 265.00},
+            {"id": "H11", "user_id": "demo-user-001", "asset_id": "IN01", "source": "Broker A", "units": 500, "avg_buy_price": 93.50, "current_price": 101.20},
+            {"id": "H12", "user_id": "demo-user-001", "asset_id": "IN02", "source": "Depository", "units": 520, "avg_buy_price": 59.00, "current_price": 64.50},
+            {"id": "H13", "user_id": "demo-user-001", "asset_id": "OT01", "source": "Broker A", "units": 42.23, "avg_buy_price": 842.88, "current_price": 1000.00},
+        ]
+        for h in holdings_data:
+            db.add(DBHolding(**h))
 
-        # REITS total: 60,000 + 40,260 + 25,175 = 125,435 (~14.9%)
-        ("H08", "demo-user-001", "RT01", "Broker A", 160, 342.00, 375.00),  # Buy: 54,720 -> Cur: 60,000 (P/L: +5,280)
-        ("H09", "demo-user-001", "RT02", "Broker B", 120, 310.00, 335.50),  # Buy: 37,200 -> Cur: 40,260 (P/L: +3,060)
-        ("H10", "demo-user-001", "RT03", "Imported CSV", 95, 245.00, 265.00),# Buy: 23,275 -> Cur: 25,175 (P/L: +1,900)
+        # Seed Transactions
+        transactions_data = [
+            {"id": "T01", "user_id": "demo-user-001", "asset_id": "RT01", "type": "DISTRIBUTION", "units": 160, "price": 5.25, "amount": 840.0, "date": "2026-09-18", "source": "Broker A"},
+            {"id": "T02", "user_id": "demo-user-001", "asset_id": "BD01", "type": "INTEREST", "units": 700, "price": 3.59, "amount": 2513.0, "date": "2026-09-15", "source": "Depository"},
+            {"id": "T03", "user_id": "demo-user-001", "asset_id": "IN01", "type": "DISTRIBUTION", "units": 500, "price": 3.10, "amount": 1550.0, "date": "2026-09-02", "source": "Broker A"},
+            {"id": "T04", "user_id": "demo-user-001", "asset_id": "EQ02", "type": "DIVIDEND", "units": 30, "price": 28.0, "amount": 840.0, "date": "2026-08-24", "source": "Broker B"},
+            {"id": "T05", "user_id": "demo-user-001", "asset_id": "EQ01", "type": "BUY", "units": 100, "price": 252.0, "amount": 25200.0, "date": "2026-08-10", "source": "Broker A"},
+            {"id": "T06", "user_id": "demo-user-001", "asset_id": "RT02", "type": "DISTRIBUTION", "units": 120, "price": 4.80, "amount": 576.0, "date": "2026-07-28", "source": "Broker B"}
+        ]
+        for t in transactions_data:
+            db.add(DBTransaction(**t))
 
-        # INVITS total: 50,600 + 33,540 = 84,140 (~10%)
-        ("H11", "demo-user-001", "IN01", "Broker A", 500, 93.50, 101.20),   # Buy: 46,750 -> Cur: 50,600 (P/L: +3,850)
-        ("H12", "demo-user-001", "IN02", "Depository", 520, 59.00, 64.50),  # Buy: 30,680 -> Cur: 33,540 (P/L: +2,860)
+        # Seed Goals
+        goals_data = [
+            {"id": "G01", "user_id": "demo-user-001", "title": "Emergency Liquidity Buffer", "category": "Emergency", "target_amount": 250000.0, "current_amount": 210000.0, "time_period": "6 Months", "icon": "shield-check"},
+            {"id": "G02", "user_id": "demo-user-001", "title": "Nordic Winter Expedition", "category": "Travel", "target_amount": 180000.0, "current_amount": 125000.0, "time_period": "12 Months", "icon": "plane"},
+            {"id": "G03", "user_id": "demo-user-001", "title": "Executive Masters / Upskilling", "category": "Education", "target_amount": 500000.0, "current_amount": 280000.0, "time_period": "24 Months", "icon": "graduation-cap"},
+            {"id": "G04", "user_id": "demo-user-001", "title": "Apartment Down Payment", "category": "Home", "target_amount": 1500000.0, "current_amount": 550000.0, "time_period": "36 Months", "icon": "home"},
+            {"id": "G05", "user_id": "demo-user-001", "title": "Long-Term Passive Income Stash", "category": "Retirement", "target_amount": 2500000.0, "current_amount": 842500.0, "time_period": "60 Months", "icon": "trending-up"}
+        ]
+        for g in goals_data:
+            db.add(DBGoal(**g))
 
-        # OTHER / CASH total: 42,230 (~5%)
-        # Total Cur: 438,315 + 152,380 + 125,435 + 84,140 + 42,230 = 842,500!
-        # Total Buy: 417,270 + 149,510 + 115,195 + 77,430 + 35,595 = 795,000!
-        # P/L: 842,500 - 795,000 = +47,500! Matches problem prompt exactly!
-        ("H13", "demo-user-001", "OT01", "Broker A", 42.23, 842.88, 1000.00) # Buy: 35,595 -> Cur: 42,230 (P/L: +6,635)
-    ]
+        # Seed 12-Month Performance Snapshots
+        snapshots_data = [
+            {"id": "S01", "user_id": "demo-user-001", "date": "Oct 2025", "total_value": 720000, "invested_value": 710000, "equity_val": 360000, "bond_val": 140000, "reit_val": 110000, "invit_val": 75000, "other_val": 35000},
+            {"id": "S02", "user_id": "demo-user-001", "date": "Nov 2025", "total_value": 735000, "invested_value": 720000, "equity_val": 372000, "bond_val": 142000, "reit_val": 112000, "invit_val": 74000, "other_val": 35000},
+            {"id": "S03", "user_id": "demo-user-001", "date": "Dec 2025", "total_value": 748000, "invested_value": 730000, "equity_val": 381000, "bond_val": 143000, "reit_val": 114000, "invit_val": 74500, "other_val": 35500},
+            {"id": "S04", "user_id": "demo-user-001", "date": "Jan 2026", "total_value": 759000, "invested_value": 745000, "equity_val": 390000, "bond_val": 145000, "reit_val": 115000, "invit_val": 73000, "other_val": 36000},
+            {"id": "S05", "user_id": "demo-user-001", "date": "Feb 2026", "total_value": 745000, "invested_value": 750000, "equity_val": 378000, "bond_val": 146000, "reit_val": 113000, "invit_val": 72000, "other_val": 36000},
+            {"id": "S06", "user_id": "demo-user-001", "date": "Mar 2026", "total_value": 768000, "invested_value": 760000, "equity_val": 395000, "bond_val": 147000, "reit_val": 116000, "invit_val": 73500, "other_val": 36500},
+            {"id": "S07", "user_id": "demo-user-001", "date": "Apr 2026", "total_value": 782000, "invested_value": 768000, "equity_val": 404000, "bond_val": 148000, "reit_val": 118000, "invit_val": 75000, "other_val": 37000},
+            {"id": "S08", "user_id": "demo-user-001", "date": "May 2026", "total_value": 796000, "invested_value": 775000, "equity_val": 412000, "bond_val": 149000, "reit_val": 120000, "invit_val": 77000, "other_val": 38000},
+            {"id": "S09", "user_id": "demo-user-001", "date": "Jun 2026", "total_value": 808000, "invested_value": 780000, "equity_val": 418000, "bond_val": 150000, "reit_val": 121000, "invit_val": 79000, "other_val": 40000},
+            {"id": "S10", "user_id": "demo-user-001", "date": "Jul 2026", "total_value": 821000, "invested_value": 786000, "equity_val": 426000, "bond_val": 150500, "reit_val": 123000, "invit_val": 81000, "other_val": 40500},
+            {"id": "S11", "user_id": "demo-user-001", "date": "Aug 2026", "total_value": 830000, "invested_value": 790000, "equity_val": 431000, "bond_val": 151200, "reit_val": 124500, "invit_val": 82500, "other_val": 40800},
+            {"id": "S12", "user_id": "demo-user-001", "date": "Sep 2026", "total_value": 842500, "invested_value": 795000, "equity_val": 438315, "bond_val": 152380, "reit_val": 125435, "invit_val": 84140, "other_val": 42230}
+        ]
+        for s in snapshots_data:
+            db.add(DBPortfolioSnapshot(**s))
 
-    for h in holdings_data:
-        cursor.execute("""
-        INSERT INTO holdings (id, user_id, asset_id, source, units, avg_buy_price, current_price)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, h)
-
-    # Seed Transactions
-    transactions_data = [
-        ("T01", "demo-user-001", "RT01", "DISTRIBUTION", 160, 5.25, 840.0, "2026-09-18", "Broker A"),
-        ("T02", "demo-user-001", "BD01", "INTEREST", 700, 3.59, 2513.0, "2026-09-15", "Depository"),
-        ("T03", "demo-user-001", "IN01", "DISTRIBUTION", 500, 3.10, 1550.0, "2026-09-02", "Broker A"),
-        ("T04", "demo-user-001", "EQ02", "DIVIDEND", 30, 28.0, 840.0, "2026-08-24", "Broker B"),
-        ("T05", "demo-user-001", "EQ01", "BUY", 100, 252.0, 25200.0, "2026-08-10", "Broker A"),
-        ("T06", "demo-user-001", "RT02", "DISTRIBUTION", 120, 4.80, 576.0, "2026-07-28", "Broker B")
-    ]
-    for t in transactions_data:
-        cursor.execute("""
-        INSERT INTO transactions (id, user_id, asset_id, type, units, price, amount, date, source)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, t)
-
-    # Seed Goals
-    goals_data = [
-        ("G01", "demo-user-001", "Emergency Liquidity Buffer", "Emergency", 250000.0, 210000.0, "6 Months", "shield-check"),
-        ("G02", "demo-user-001", "Nordic Winter Expedition", "Travel", 180000.0, 125000.0, "12 Months", "plane"),
-        ("G03", "demo-user-001", "Executive Masters / Upskilling", "Education", 500000.0, 280000.0, "24 Months", "graduation-cap"),
-        ("G04", "demo-user-001", "Apartment Down Payment", "Home", 1500000.0, 550000.0, "36 Months", "home"),
-        ("G05", "demo-user-001", "Long-Term Passive Income Stash", "Retirement", 2500000.0, 842500.0, "60 Months", "trending-up")
-    ]
-    for g in goals_data:
-        cursor.execute("""
-        INSERT INTO goals (id, user_id, title, category, target_amount, current_amount, time_period, icon)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, g)
-
-    # Seed 12-Month Portfolio Historical Performance Snapshots
-    historical_snapshots = [
-        ("S01", "demo-user-001", "Oct 2025", 720000, 710000, 360000, 140000, 110000, 75000, 35000),
-        ("S02", "demo-user-001", "Nov 2025", 735000, 720000, 372000, 142000, 112000, 74000, 35000),
-        ("S03", "demo-user-001", "Dec 2025", 748000, 730000, 381000, 143000, 114000, 74500, 35500),
-        ("S04", "demo-user-001", "Jan 2026", 759000, 745000, 390000, 145000, 115000, 73000, 36000),
-        ("S05", "demo-user-001", "Feb 2026", 745000, 750000, 378000, 146000, 113000, 72000, 36000),
-        ("S06", "demo-user-001", "Mar 2026", 768000, 760000, 395000, 147000, 116000, 73500, 36500),
-        ("S07", "demo-user-001", "Apr 2026", 782000, 768000, 404000, 148000, 118000, 75000, 37000),
-        ("S08", "demo-user-001", "May 2026", 796000, 775000, 412000, 149000, 120000, 77000, 38000),
-        ("S09", "demo-user-001", "Jun 2026", 808000, 780000, 418000, 150000, 121000, 79000, 40000),
-        ("S10", "demo-user-001", "Jul 2026", 821000, 786000, 426000, 150500, 123000, 81000, 40500),
-        ("S11", "demo-user-001", "Aug 2026", 830000, 790000, 431000, 151200, 124500, 82500, 40800),
-        ("S12", "demo-user-001", "Sep 2026", 842500, 795000, 438315, 152380, 125435, 84140, 42230)
-    ]
-    for s in historical_snapshots:
-        cursor.execute("""
-        INSERT INTO portfolio_snapshots (id, user_id, date, total_value, invested_value, equity_val, bond_val, reit_val, invit_val, other_val)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, s)
-
-    conn.commit()
-    conn.close()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     init_db()
     seed_demo_data(force=True)
-    print("Database initialized & seeded successfully!")
+    print("Database initialized and demo data seeded via SQLAlchemy!")

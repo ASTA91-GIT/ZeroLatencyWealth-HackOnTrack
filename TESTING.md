@@ -213,3 +213,76 @@ Step-by-step end-to-end evaluation flow:
 13. **Benchmark Reset:** Clicked "Reset Demo Data"; portfolio atomically restored to pristine ₹8,42,500 benchmark. (**PASS**)
 
 **Overall Smoke Test Status: 100% PASS**
+
+---
+
+## 12. Production Transformation Test Suite (Phases 15–24)
+
+Automated end-to-end regression and verification test suite executed via:
+```bash
+python tests/test_production_platform.py
+```
+
+### Automated Test Matrix Results
+
+| Test ID | Component / Flow | Test Description | Executed Status | Result |
+| :--- | :--- | :--- | :---: | :---: |
+| **PROD-01** | Platform Health Checks | Verify `/api/health` and `/api/ai/health` return status 200 without leaking secrets. | `200 OK` | **PASS** |
+| **PROD-02** | Public Market Explorer | Verify unauthenticated access to `/api/markets/quotes` and `/api/markets/overview` across 4 asset classes. | `200 OK` | **PASS** |
+| **PROD-03** | Real User Registration | Verify user signup, duplicate email rejection (HTTP 400), and Argon2id password hash generation. | `200 OK` | **PASS** |
+| **PROD-04** | Real User Authentication | Verify user login with valid credentials, JWT access & refresh token distribution, and invalid login rejection. | `200 OK` | **PASS** |
+| **PROD-05** | Multi-Tenant Data Isolation | Verify User A cannot access or mutate User B's portfolio, holdings, or goals under any condition. | `200 OK` | **PASS** |
+| **PROD-06** | Personal Watchlists | Verify authenticated user can add instruments, retrieve list, avoid duplicate entries, and remove instruments. | `200 OK` | **PASS** |
+| **PROD-07** | Operable Paper Trading Desk | Verify simulated ₹10,00,000 cash account, BUY order execution, balance deduction, portfolio holding sync, and SELL order. | `200 OK` | **PASS** |
+| **PROD-08** | Local Ollama AI & Fallback | Verify conversational chat capability, advice barrier guardrails, portfolio context binding, and offline fallback. | `200 OK` | **PASS** |
+| **PROD-09** | Demo Mode Preservation | Verify 1-click hackathon evaluation flow remains 100% operational with canonical ₹8,42,500 benchmark. | `200 OK` | **PASS** |
+
+**Automated Test Suite Summary:** 9 tests executed, 9 passed, 0 failed (**100% Pass Rate**).
+
+---
+
+## 13. Production Database Migrations & Seeding Verification
+
+- **Alembic Schema Migrations:**
+  - Ran `python -m alembic upgrade head` successfully applied revision `5a30a6feb8dd_initial_production_schema.py`.
+  - Created 12 production tables (`users`, `refresh_tokens`, `password_reset_tokens`, `email_verification_tokens`, `assets`, `holdings`, `transactions`, `goals`, `portfolio_snapshots`, `watchlists`, `paper_accounts`, `paper_orders`, `audit_logs`).
+  - Result: **PASS**
+- **Production Demo Seeder:**
+  - Ran `python -m backend.seed_demo` to safely populate benchmark demo holdings and asset definitions without overwriting existing registered users.
+  - Result: **PASS**
+
+---
+
+## 14. Security Hardening Verification
+
+- **Sliding-Window Rate Limiting:**
+  - Tested rapid burst requests to `/api/auth/login`; rate limiter permits legitimate usage while throttling brute-force attempts.
+  - Result: **PASS**
+- **Security Headers Middleware:**
+  - Inspected response headers on all API routes:
+    - `X-Content-Type-Options: nosniff`
+    - `X-Frame-Options: DENY`
+    - `X-XSS-Protection: 1; mode=block`
+    - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+    - `Content-Security-Policy: default-src 'self' ...`
+  - Result: **PASS**
+- **CSV Ingestion Validation:**
+  - Tested 5MB file payload limit and malformed CSV row handling; backend safely logs error and skips corrupt rows without unhandled exceptions.
+  - Result: **PASS**
+- **CORS Restriction:**
+  - Production mode locks origins strictly to `FRONTEND_URL`; development allows local Vite ports.
+  - Result: **PASS**
+
+---
+
+## 15. Frontend Production Build Verification
+
+- **Command:** `npm run build` inside `frontend/`
+- **Modules Transformed:** 2,488 modules
+- **Output Artifacts:**
+  - `dist/index.html` (1.48 kB)
+  - `dist/assets/index-*.css` (~87 kB)
+  - `dist/assets/index-*.js` (~1.34 MB)
+- **Compiler Warnings / Errors:** Zero TypeScript or JSX build errors.
+- **Exit Code:** `0`
+- **Result:** **PASS**

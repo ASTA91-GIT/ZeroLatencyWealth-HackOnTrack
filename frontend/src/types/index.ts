@@ -1,4 +1,4 @@
-export const ZERO_LATENCY_VERSION = '1.0.0';
+export const ZERO_LATENCY_VERSION = '2.0.0';
 
 export type AssetType = 'EQUITY' | 'BOND' | 'REIT' | 'INVIT' | 'OTHER';
 
@@ -7,7 +7,15 @@ export interface UserProfile {
   name: string;
   email: string;
   is_demo: boolean;
+  email_verified?: boolean;
   created_at?: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: UserProfile;
+  message: string;
+  refresh_token?: string;
 }
 
 export interface HoldingModel {
@@ -79,6 +87,93 @@ export interface AssetModel {
   change_24h: number;
 }
 
+export interface MarketIndex {
+  symbol: string;
+  name: string;
+  value: number;
+  change: number;
+  change_percent: number;
+  status: 'UP' | 'DOWN';
+}
+
+export interface MarketOverview {
+  market_status: string;
+  provider: string;
+  last_updated: string;
+  indices: MarketIndex[];
+  top_gainers: MarketQuote[];
+  top_losers: MarketQuote[];
+  market_breadth: {
+    advances: number;
+    declines: number;
+    unchanged: number;
+  };
+}
+
+export interface MarketQuote extends AssetModel {
+  volume_24h?: string;
+  high_52w?: number;
+  low_52w?: number;
+  pe_ratio?: number;
+  market_cap?: string;
+  dividend_frequency?: string;
+  history?: Array<{ date: string; price: number }>;
+}
+
+export interface WatchlistItem {
+  id: string;
+  asset_id: string;
+  symbol: string;
+  name: string;
+  asset_type: AssetType;
+  sector?: string;
+  price: number;
+  change_24h: number;
+  annual_yield: number;
+  risk_level?: string;
+  added_at: string;
+}
+
+export interface PaperAccount {
+  user_id: string;
+  cash_balance: number;
+  currency: string;
+  holdings_value: number;
+  total_portfolio_equity: number;
+  unrealized_pl: number;
+  is_simulated: boolean;
+  disclaimer: string;
+}
+
+export interface PaperOrder {
+  id: string;
+  asset_id: string;
+  symbol: string;
+  name: string;
+  asset_type: AssetType;
+  order_type: 'BUY' | 'SELL';
+  units: number;
+  price: number;
+  total_amount: number;
+  status: string;
+  created_at: string;
+}
+
+export interface PaperOrderResponse {
+  success: boolean;
+  order_id?: string;
+  order_type?: string;
+  symbol?: string;
+  units?: number;
+  execution_price?: number;
+  total_amount?: number;
+  remaining_cash?: number;
+  status?: string;
+  message: string;
+  is_simulated: boolean;
+  disclaimer: string;
+}
+
 export interface GoalModel {
   id: string;
   user_id: string;
@@ -104,54 +199,35 @@ export interface HistoricalDataPoint {
 }
 
 export interface PortfolioInsightsResponse {
-  summary: {
-    total_value: number;
-    total_invested: number;
-    unrealized_pl: number;
-    unrealized_pl_percent: number;
-    total_assets: number;
-  };
+  summary: Record<string, any>;
   observations: Array<{
+    type?: string;
     title: string;
-    text: string;
-    category: string;
-    type: string;
+    category?: string;
+    text?: string;
+    description?: string;
+    impact?: string;
+    actionable_takeaway?: string;
   }>;
-  risk_assessment: {
-    overall_score: string;
-    volatility_index: string;
-    liquidity_profile: {
-      high_liquidity_pct: number;
-      moderate_liquidity_pct: number;
-      low_to_moderate_pct: number;
-    };
-    hedging_efficiency: string;
-  };
-  income_projections: {
-    projected_annual: number;
-    weighted_yield_pct: number;
-    monthly_average: number;
-    distribution_sources: Array<{
-      source_type: string;
-      amount: number;
-      frequency: string;
-    }>;
-  };
+  risk_assessment: Record<string, any>;
+  income_projections: Record<string, any>;
   concentration_flags: Array<{
-    symbol: string;
-    name: string;
+    asset: string;
     allocation: number;
-    asset_type: string;
-    warning: string;
+    threshold: number;
+    severity: string;
+    rationale: string;
   }>;
   historical_trend: HistoricalDataPoint[];
 }
 
-export interface ChatMessage {
-  id: string;
-  sender: 'user' | 'copilot';
-  text: string;
-  timestamp: string;
-  suggestedQuestions?: string[];
-  disclaimer?: string;
+export interface AiHealthResponse {
+  available: boolean;
+  provider: string;
+  base_url?: string;
+  configured_model?: string;
+  model_ready?: boolean;
+  available_models?: string[];
+  status: string;
+  error?: string;
 }

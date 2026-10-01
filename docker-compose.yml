@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: zerolatency-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-zerolatency_db}
+      POSTGRES_USER: ${POSTGRES_USER:-zerolatency_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zerolatency_secure_password_2026}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zerolatency_user} -d ${POSTGRES_DB:-zerolatency_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: zerolatency-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-zerolatency_user}:${POSTGRES_PASSWORD:-zerolatency_secure_password_2026}@postgres:5432/${POSTGRES_DB:-zerolatency_db}
+      JWT_SECRET: ${JWT_SECRET:-zerolatency-production-secret-key-32981-sec}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
+      MARKET_DATA_PROVIDER: ${MARKET_DATA_PROVIDER:-demo}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-false}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: zerolatency-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: zerolatency-ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  pgdata:
+  ollama_data:

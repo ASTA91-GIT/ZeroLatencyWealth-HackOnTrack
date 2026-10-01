@@ -3,13 +3,17 @@ import { useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { ToastContainer } from './components/ToastContainer';
 import { AssetDetailModal } from './components/AssetDetailModal';
+import { PaperTradeModal } from './components/PaperTradeModal';
+import { AuthPromptModal } from './components/AuthPromptModal';
 import { CopilotDrawer } from './components/CopilotDrawer';
 
 // Views
 import { LandingPage } from './views/LandingPage';
+import { MarketsView } from './views/MarketsView';
 import { DashboardView } from './views/DashboardView';
 import { UnifiedPortfolioView } from './views/UnifiedPortfolioView';
 import { AssetExplorerView } from './views/AssetExplorerView';
+import { WatchlistView } from './views/WatchlistView';
 import { PortfolioInsightsView } from './views/PortfolioInsightsView';
 import { GoalsView } from './views/GoalsView';
 import { LearningCenterView } from './views/LearningCenterView';
@@ -22,18 +26,33 @@ import { AuthView } from './views/AuthView';
 import { Sparkles } from 'lucide-react';
 
 export const MainApp: React.FC = () => {
-  const { currentView, selectedAsset, setSelectedAsset, setIsCopilotDrawerOpen } = useApp();
+  const {
+    currentView,
+    selectedAsset,
+    setSelectedAsset,
+    paperTradeModalAsset,
+    closePaperTradeModal,
+    authPromptOpen,
+    authPromptAction,
+    closeAuthPrompt,
+    setIsCopilotDrawerOpen
+  } = useApp();
 
   const renderCurrentView = () => {
     switch (currentView) {
       case 'landing':
         return <LandingPage />;
+      case 'markets':
+        return <MarketsView />;
       case 'dashboard':
         return <DashboardView />;
       case 'portfolio':
         return <UnifiedPortfolioView />;
       case 'explorer':
         return <AssetExplorerView />;
+      case 'watchlist':
+      case 'papertrading':
+        return <WatchlistView />;
       case 'insights':
         return <PortfolioInsightsView />;
       case 'goals':
@@ -50,8 +69,14 @@ export const MainApp: React.FC = () => {
         return <SettingsView />;
       case 'login':
         return <AuthView mode="login" />;
-      case 'register':
-        return <AuthView mode="register" />;
+      case 'signup':
+        return <AuthView mode="signup" />;
+      case 'forgot-password':
+        return <AuthView mode="forgot-password" />;
+      case 'reset-password':
+        return <AuthView mode="reset-password" />;
+      case 'verify-email':
+        return <AuthView mode="verify-email" />;
       default:
         return <DashboardView />;
     }
@@ -77,7 +102,7 @@ export const MainApp: React.FC = () => {
           <Sparkles className="w-4 h-4 fill-white" />
           <span className="hidden sm:inline">ZeroLatency Copilot</span>
           <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] uppercase font-mono">
-            AI
+            LOCAL AI
           </span>
         </button>
       )}
@@ -88,7 +113,20 @@ export const MainApp: React.FC = () => {
         onClose={() => setSelectedAsset(null)}
       />
 
-      {/* Persistent AI Copilot Drawer */}
+      {/* Simulated Paper Trade Order Ticket Modal */}
+      <PaperTradeModal
+        asset={paperTradeModalAsset}
+        onClose={closePaperTradeModal}
+      />
+
+      {/* Unauthenticated Visitor Gatekeeper Modal */}
+      <AuthPromptModal
+        isOpen={authPromptOpen}
+        onClose={closeAuthPrompt}
+        actionTitle={authPromptAction}
+      />
+
+      {/* Persistent Local AI Copilot Drawer */}
       <CopilotDrawer />
 
       {/* Global Toast Notifications */}

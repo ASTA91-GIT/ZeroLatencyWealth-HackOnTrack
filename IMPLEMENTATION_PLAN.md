@@ -1,8 +1,8 @@
 # ZERO LATENCY WEALTH — Implementation Plan
 
-> **"One Portfolio. Every Asset. Clearer Understanding."**  
-> **Hack on Track Round 1 — Problem Statement 2 (PS2)**  
-> **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)  
+> **"One Portfolio. Every Asset. Clearer Understanding."**
+> **Hack on Track Round 1 — Problem Statement 2 (PS2)**
+> **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)
 > **Source of Truth:** Current Codebase Implementation
 
 ---
@@ -222,6 +222,144 @@ Phase 13 ──► Phase 14
   - Push clean git commits to `main` branch on GitHub.
 - **Relevant Files:**
   - `TRD.md`, `APP_FLOW.md`, `IMPLEMENTATION_PLAN.md`, `TESTING.md`, `README.md`
-- **Dependencies:** Phase 13
-- **Verification:** Git tracking clean; remote repository synchronized.
-- **Status:** **COMPLETE**
+  - Dependencies: Phase 13
+  - Verification: Git tracking clean; remote repository synchronized.
+  - Status: COMPLETE
+
+---
+
+## Phase 15 — Production Authentication
+- **Objective:** Upgrade authentication from prototype to production-grade security with Argon2id password hashing, JWT access tokens, refresh token rotation, user data isolation, and email verification.
+- **Tasks:**
+  - Implement Argon2id password hashing via `argon2-cffi` with legacy fallback support.
+  - Add JWT access tokens and refresh tokens in `backend/services/auth_service.py`.
+  - Implement endpoints: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `POST /api/auth/refresh`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `POST /api/auth/verify-email`.
+  - Build modern Signup, Login, Forgot Password, Reset Password, and Verify Email views with password strength indicator, confirm password, and show/hide toggles.
+  - Preserve 1-click Demo Mode authentication for hackathon evaluation (`POST /api/auth/demo`).
+- **Relevant Files:** `backend/services/auth_service.py`, `backend/services/email_service.py`, `frontend/src/views/AuthView.tsx`, `backend/security.py`
+- **Verification:** Automated tests verify Argon2id hashing, token validation, user isolation, and password reset.
+- **Status:** COMPLETE
+
+---
+
+## Phase 16 — Public Market Experience
+- **Objective:** Enable public exploration of markets, asset classes, and individual quotes without forcing users to log in immediately.
+- **Tasks:**
+  - Redesign landing page flow to provide open exploration with clear primary CTAs: "Explore Markets", "Explore Wealth OS", "Create Account", "Log In", and secondary "Try Demo".
+  - Implement dedicated Public Market Explorer view at `/markets` (`MarketsView.tsx`).
+  - Add Market Data Service abstraction (`backend/services/market_data_service.py`) supporting `DemoMarketDataProvider` and `RealMarketDataProvider` via `MARKET_DATA_PROVIDER=demo|real`.
+  - Add market overview bar (NIFTY 50, SENSEX, Sovereign 10Y Yield, REIT/InvIT Index) and live status.
+  - Display normalized quotes across Equities, Sovereign Bonds, REITs, and InvITs with search and category filters.
+- **Relevant Files:** `backend/services/market_data_service.py`, `frontend/src/views/MarketsView.tsx`, `frontend/src/views/LandingPage.tsx`
+- **Verification:** Public users can search and view quotes without authentication; action clicks prompt auth gracefully.
+- **Status:** COMPLETE
+
+---
+
+## Phase 17 — PostgreSQL & Data Persistence
+- **Objective:** Introduce full SQLAlchemy ORM abstraction supporting SQLite (development) and PostgreSQL (production) with Alembic migrations and tenant isolation.
+- **Tasks:**
+  - Define declarative SQLAlchemy models in `backend/db_models.py` (users, assets, holdings, transactions, goals, snapshots, refresh_tokens, watchlists, paper_accounts, paper_orders, audit_logs).
+  - Update `backend/database.py` to support `DATABASE_URL` for PostgreSQL and SQLite.
+  - Configure Alembic migrations (`alembic.ini`, `backend/alembic/env.py`, initial revision).
+  - Create safe standalone demo seeding script `backend/seed_demo.py` callable via `python -m backend.seed_demo`.
+  - Enforce strict user data isolation in all query services.
+- **Relevant Files:** `backend/db_models.py`, `backend/database.py`, `backend/seed_demo.py`, `alembic.ini`, `backend/alembic/*`
+- **Verification:** Alembic autogenerates initial schema; SQLite and PostgreSQL connections verified; seeding succeeds.
+- **Status:** COMPLETE
+
+---
+
+## Phase 18 — Local AI / Ollama
+- **Objective:** Power the intelligence layer exclusively with local Ollama LLMs with zero external hosted API token dependencies.
+- **Tasks:**
+  - Implement `backend/services/local_ai_service.py` communicating with local Ollama (`http://localhost:11434`).
+  - Configure model via `OLLAMA_MODEL` (e.g. `llama3.1:8b`).
+  - Add internal AI health check endpoint `GET /api/ai/health`.
+  - Implement robust offline fallback hierarchy: (1) Local Ollama LLM -> (2) Deterministic knowledge engine -> (3) Clear offline status indicator. Never crash when Ollama is unavailable.
+- **Relevant Files:** `backend/services/local_ai_service.py`, `backend/main.py`
+- **Verification:** Local AI health endpoint returns connectivity status; offline fallback handles arbitrary questions.
+- **Status:** COMPLETE
+
+---
+
+## Phase 19 — Conversational Copilot
+- **Objective:** Upgrade Copilot from static prompts into an interactive, multi-turn conversational chatbot with portfolio awareness and financial guardrails.
+- **Tasks:**
+  - Support arbitrary user queries about assets, financial terminology, ratios, and portfolio breakdown.
+  - Implement bounded conversational memory (`MAX_CHAT_MESSAGES=10`, `MAX_CONTEXT_TOKENS=2048`).
+  - Inject safe authenticated user portfolio context (total value, asset allocation percentages, top holdings).
+  - Enforce strict financial guardrails (educational only; no personalized buy/sell directives).
+  - Upgrade Chat UI in `CopilotDrawer.tsx` with copy response, clear history, status indicator, and prompt chips.
+- **Relevant Files:** `backend/services/local_ai_service.py`, `frontend/src/components/CopilotDrawer.tsx`
+- **Verification:** Copilot answers questions with context; guardrail prompt prevents personalized buy/sell advice.
+- **Status:** COMPLETE
+
+---
+
+## Phase 20 — Watchlist & Paper Trading
+- **Objective:** Implement user-isolated watchlists and simulated paper trading to make the platform operational without real financial risk.
+- **Tasks:**
+  - Build Watchlist service (`backend/services/watchlist_service.py`) and endpoints (`/api/watchlist`).
+  - Build Paper Trading service (`backend/services/paper_trading_service.py`) with initial ₹10,00,000 simulated cash balance.
+  - Implement simulated Buy/Sell order execution with cash balance validation, holding updates, transaction records, and portfolio recalculation.
+  - Create `PaperTradeModal.tsx` order ticket with live pricing and simulation warnings.
+  - Create `WatchlistView.tsx` for watchlist inspection and paper order history.
+- **Relevant Files:** `backend/services/watchlist_service.py`, `backend/services/paper_trading_service.py`, `frontend/src/views/WatchlistView.tsx`, `frontend/src/components/PaperTradeModal.tsx`
+- **Verification:** Automated tests verify paper buy orders update cash balance, create holdings, and record transactions.
+- **Status:** COMPLETE
+
+---
+
+## Phase 21 — Production Security
+- **Objective:** Harden security posture across CORS, rate limiting, security headers, upload sanitization, and structured errors.
+- **Tasks:**
+  - Restrict CORS origins via `FRONTEND_URL` in production; avoid wildcard origins.
+  - Implement sliding-window rate limiting on auth, chat, and paper trading endpoints in `backend/security.py`.
+  - Add security headers middleware (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`).
+  - Enforce CSV upload limits (5MB max size, column validation, 1,000 rows max, malformed row handling).
+  - Standardize API error responses: `{ "success": false, "error": { "code": "...", "message": "..." } }`.
+- **Relevant Files:** `backend/security.py`, `backend/main.py`, `backend/services/import_service.py`
+- **Verification:** Rate limiters, header injection, and CSV validation verified via automated tests.
+- **Status:** COMPLETE
+
+---
+
+## Phase 22 — Docker & Deployment
+- **Objective:** Package the entire stack into production-ready containerized microservices.
+- **Tasks:**
+  - Create `backend/Dockerfile` with Python 3.11 slim, dependencies, and health checks.
+  - Create `frontend/Dockerfile` with multi-stage Node build and Nginx Alpine static serving.
+  - Create `frontend/nginx.conf` with SPA routing and `/api` reverse proxy.
+  - Create `docker-compose.yml` orchestrating `frontend`, `backend`, `postgres`, and `ollama`.
+  - Create `docker-compose.dev.yml` for local containerized development.
+  - Update `.env.example` with all configuration variables and create `.dockerignore`.
+- **Relevant Files:** `backend/Dockerfile`, `frontend/Dockerfile`, `frontend/nginx.conf`, `docker-compose.yml`, `docker-compose.dev.yml`, `.env.example`, `.dockerignore`
+- **Verification:** Docker files linted and verified; compose configuration validated.
+- **Status:** COMPLETE
+
+---
+
+## Phase 23 — Production Testing
+- **Objective:** Run exhaustive automated testing across all platform components.
+- **Tasks:**
+  - Build comprehensive pytest suite in `tests/test_production_platform.py`.
+  - Test system health check, local AI health, public markets discovery, demo mode auth, real user registration/login, user data isolation, watchlist persistence, paper trading execution, local AI copilot, and CSV upload.
+  - Run frontend production compilation: `npm run build`.
+- **Relevant Files:** `tests/test_production_platform.py`, `frontend/`
+- **Verification:** All 9 automated backend test suites passed (100%); frontend bundle builds with zero errors.
+- **Status:** COMPLETE
+
+---
+
+## Phase 24 — Production Release
+- **Objective:** Finalize documentation, update TRD.md, APP_FLOW.md, TESTING.md, README.md, and commit to GitHub.
+- **Tasks:**
+  - Update `TRD.md` with production architecture specifications.
+  - Update `APP_FLOW.md` with public visitor -> market explorer -> auth -> Wealth OS flow.
+  - Update `TESTING.md` with test reports and verification steps.
+  - Update `README.md` with deployment, Docker, Ollama setup, and environment variables.
+  - Commit all changes cleanly to Git and push to `origin main`.
+- **Relevant Files:** `TRD.md`, `APP_FLOW.md`, `TESTING.md`, `README.md`
+- **Verification:** Clean git tree; all acceptance criteria satisfied.
+- **Status:** COMPLETE

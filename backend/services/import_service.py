@@ -1,11 +1,14 @@
 import csv
 import io
 import uuid
+import logging
 from typing import List, Dict, Any
-from backend.database import get_connection
+from backend.database import SessionLocal
+from backend.db_models import DBHolding, DBAsset
 from backend.models import ImportResponse
 
-# Fictional import pools for simulated broker connectors
+logger = logging.getLogger("zerolatency.import")
+
 SIMULATED_BROKER_DATA = {
     "Broker A": [
         {"symbol": "INFY", "name": "Infosys Ltd (Demo)", "type": "EQUITY", "units": 45, "buy_price": 1780.0, "current_price": 1890.0, "sector": "Information Technology", "yield": 2.2},
@@ -22,123 +25,180 @@ SIMULATED_BROKER_DATA = {
 }
 
 def simulate_source_sync(source_name: str, user_id: str = "demo-user-001") -> ImportResponse:
-    conn = get_connection()
-    cursor = conn.cursor()
+    db = SessionLocal()
+    try:
+        items = SIMULATED_BROKER_DATA.get(source_name, SIMULATED_BROKER_DATA["Broker A"])
+        added_holdings = []
 
-    items = SIMULATED_BROKER_DATA.get(source_name, SIMULATED_BROKER_DATA["Broker A"])
-    added_holdings = []
+        for item in items:
+            asset = db.query(DBAsset).filter(DBAsset.symbol == item["symbol"]).first()
+            if not asset:
+                asset_id = f"IMP_{uuid.uuid4().hex[:6].upper()}"
+                asset = DBAsset(
+                    id=asset_id,
+                    symbol=item["symbol"],
+                    name=item["name"],
+                    asset_type=item["type"],
+                    category="Imported Portfolio Asset",
+                    sector=item.get("sector", "Diversified"),
+                    description=f"Simulated imported holding from {source_name}",
+                    risk_level="Moderate",
+                    annual_yield=item.get("yield", 4.5),
+                    liquidity_score="Moderate",
+                    price=item["current_price"],
+                    change_24h=0.45
+                )
+                db.add(asset)
+                db.flush()
 
-    for item in items:
-        # Check or create asset
-        cursor.execute("SELECT id FROM assets WHERE symbol = ?", (item["symbol"],))
-        existing_asset = cursor.fetchone()
-        
-        if existing_asset:
-            asset_id = existing_asset["id"]
-        else:
-            asset_id = f"IMP_{uuid.uuid4().hex[:6].upper()}"
-            cursor.execute("""
-            INSERT INTO assets (id, symbol, name, asset_type, category, sector, description, risk_level, annual_yield, liquidity_score, price, change_24h)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                asset_id, item["symbol"], item["name"], item["type"], "Imported Portfolio Asset",
-                item.get("sector", "Diversified"), f"Simulated imported holding from {source_name}",
-                "Moderate", item.get("yield", 4.5), "Moderate", item["current_price"], 0.45
-            ))
+            existing_holding = db.query(DBHolding).filter(
+                DBHolding.user_id == user_id,
+                DBHolding.asset_id == asset.id,
+                DBHolding.source == source_name
+            ).first()
 
-        # Check if holding already exists from this source
-        cursor.execute("SELECT id, units FROM holdings WHERE user_id = ? AND asset_id = ? AND source = ?", (user_id, asset_id, source_name))
-        existing_holding = cursor.fetchone()
+            if existing_holding:
+                existing_holding.units += item["units"]
+                holding_id = existing_holding.id
+            else:
+                holding_id = f"HLD_{uuid.uuid4().hex[:8]}"
+                new_holding = DBHolding(
+                    id=holding_id,
+                    user_id=user_id,
+                    asset_id=asset.id,
+                    source=source_name,
+                    units=item["units"],
+                    avg_buy_price=item["buy_price"],
+                    current_price=item["current_price"]
+                )
+                db.add(new_holding)
 
-        if existing_holding:
-            new_units = existing_holding["units"] + item["units"]
-            cursor.execute("UPDATE holdings SET units = ? WHERE id = ?", (new_units, existing_holding["id"]))
-            holding_id = existing_holding["id"]
-        else:
-            holding_id = f"HLD_{uuid.uuid4().hex[:8]}"
-            cursor.execute("""
-            INSERT INTO holdings (id, user_id, asset_id, source, units, avg_buy_price, current_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (holding_id, user_id, asset_id, source_name, item["units"], item["buy_price"], item["current_price"]))
+            added_holdings.append({
+                "holding_id": holding_id,
+                "symbol": item["symbol"],
+                "name": item["name"],
+                "type": item["type"],
+                "source": source_name,
+                "units": item["units"],
+                "value": round(item["units"] * item["current_price"], 2)
+            })
 
-        added_holdings.append({
-            "holding_id": holding_id,
-            "symbol": item["symbol"],
-            "name": item["name"],
-            "type": item["type"],
-            "source": source_name,
-            "units": item["units"],
-            "value": round(item["units"] * item["current_price"], 2)
-        })
+        db.commit()
 
-    conn.commit()
-    conn.close()
-
-    return ImportResponse(
-        status="success",
-        imported_count=len(added_holdings),
-        source=source_name,
-        message=f"Successfully aggregated and normalized {len(added_holdings)} instruments from {source_name}.",
-        holdings_added=added_holdings
-    )
+        return ImportResponse(
+            status="success",
+            imported_count=len(added_holdings),
+            source=source_name,
+            message=f"Successfully aggregated and normalized {len(added_holdings)} instruments from {source_name}.",
+            holdings_added=added_holdings
+        )
+    finally:
+        db.close()
 
 def parse_and_import_csv(csv_content: str, user_id: str = "demo-user-001") -> ImportResponse:
-    conn = get_connection()
-    cursor = conn.cursor()
+    """Parse, validate, and securely ingest CSV holdings with row limits and type guards."""
+    if not csv_content.strip():
+        return ImportResponse(
+            status="error",
+            imported_count=0,
+            source="Imported CSV",
+            message="Uploaded CSV file is empty.",
+            holdings_added=[]
+        )
 
-    reader = csv.DictReader(io.StringIO(csv_content))
-    added = []
+    db = SessionLocal()
+    try:
+        reader = csv.DictReader(io.StringIO(csv_content))
+        added = []
+        skipped = 0
+        MAX_ROWS = 1000
 
-    for row in reader:
-        # Standardize expected columns: Symbol, Name, AssetType, Units, BuyPrice, CurrentPrice
-        symbol = row.get("Symbol") or row.get("symbol") or row.get("Ticker") or "CSV_ASSET"
-        name = row.get("Name") or row.get("name") or symbol
-        asset_type = (row.get("AssetType") or row.get("asset_type") or row.get("Type") or "EQUITY").upper()
-        if asset_type not in ["EQUITY", "BOND", "REIT", "INVIT", "OTHER"]:
-            asset_type = "EQUITY"
+        for idx, row in enumerate(reader):
+            if idx >= MAX_ROWS:
+                logger.warning(f"CSV row limit of {MAX_ROWS} reached for user {user_id}")
+                break
 
-        try:
-            units = float(row.get("Units") or row.get("units") or 1.0)
-            buy_price = float(row.get("BuyPrice") or row.get("buy_price") or row.get("Price") or 100.0)
-            current_price = float(row.get("CurrentPrice") or row.get("current_price") or buy_price)
-        except ValueError:
-            continue
+            symbol = (row.get("Symbol") or row.get("symbol") or row.get("Ticker") or "").strip().upper()
+            if not symbol:
+                skipped += 1
+                continue
 
-        # Check or create asset
-        cursor.execute("SELECT id FROM assets WHERE symbol = ?", (symbol,))
-        row_asset = cursor.fetchone()
-        if row_asset:
-            asset_id = row_asset["id"]
-        else:
-            asset_id = f"CSV_{uuid.uuid4().hex[:6].upper()}"
-            cursor.execute("""
-            INSERT INTO assets (id, symbol, name, asset_type, category, sector, description, risk_level, annual_yield, liquidity_score, price, change_24h)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (asset_id, symbol, name, asset_type, "CSV Imported", "General", f"Imported asset from CSV file: {name}", "Moderate", 3.5, "High", current_price, 0.0))
+            name = (row.get("Name") or row.get("name") or symbol).strip()
+            asset_type = (row.get("AssetType") or row.get("asset_type") or row.get("Type") or "EQUITY").strip().upper()
+            if asset_type not in ["EQUITY", "BOND", "REIT", "INVIT", "OTHER"]:
+                asset_type = "EQUITY"
 
-        holding_id = f"CSV_{uuid.uuid4().hex[:8]}"
-        cursor.execute("""
-        INSERT INTO holdings (id, user_id, asset_id, source, units, avg_buy_price, current_price)
-        VALUES (?, ?, ?, 'Imported CSV', ?, ?, ?)
-        """, (holding_id, user_id, asset_id, units, buy_price, current_price))
+            try:
+                raw_units = row.get("Units") or row.get("units") or "1.0"
+                raw_buy = row.get("BuyPrice") or row.get("buy_price") or row.get("Price") or "100.0"
+                raw_curr = row.get("CurrentPrice") or row.get("current_price") or raw_buy
 
-        added.append({
-            "holding_id": holding_id,
-            "symbol": symbol,
-            "name": name,
-            "type": asset_type,
-            "source": "Imported CSV",
-            "units": units,
-            "value": round(units * current_price, 2)
-        })
+                units = float(raw_units)
+                buy_price = float(raw_buy)
+                current_price = float(raw_curr)
 
-    conn.commit()
-    conn.close()
+                if units <= 0 or buy_price <= 0:
+                    skipped += 1
+                    continue
+            except (ValueError, TypeError):
+                skipped += 1
+                continue
 
-    return ImportResponse(
-        status="success",
-        imported_count=len(added),
-        source="Imported CSV",
-        message=f"Successfully parsed and ingested {len(added)} holdings from uploaded CSV file.",
-        holdings_added=added
-    )
+            asset = db.query(DBAsset).filter(DBAsset.symbol == symbol).first()
+            if not asset:
+                asset_id = f"CSV_{uuid.uuid4().hex[:6].upper()}"
+                asset = DBAsset(
+                    id=asset_id,
+                    symbol=symbol,
+                    name=name,
+                    asset_type=asset_type,
+                    category="CSV Ingested",
+                    sector="Diversified",
+                    description=f"Uploaded asset via CSV import: {name}",
+                    risk_level="Moderate",
+                    annual_yield=3.5,
+                    liquidity_score="Moderate",
+                    price=current_price,
+                    change_24h=0.0
+                )
+                db.add(asset)
+                db.flush()
+
+            holding_id = f"CSV_{uuid.uuid4().hex[:8]}"
+            new_holding = DBHolding(
+                id=holding_id,
+                user_id=user_id,
+                asset_id=asset.id,
+                source="Imported CSV",
+                units=units,
+                avg_buy_price=buy_price,
+                current_price=current_price
+            )
+            db.add(new_holding)
+
+            added.append({
+                "holding_id": holding_id,
+                "symbol": symbol,
+                "name": name,
+                "type": asset_type,
+                "source": "Imported CSV",
+                "units": units,
+                "value": round(units * current_price, 2)
+            })
+
+        db.commit()
+
+        status_str = "success" if added else "warning"
+        msg = f"Successfully parsed and ingested {len(added)} holdings from uploaded CSV file."
+        if skipped > 0:
+            msg += f" ({skipped} invalid or header rows safely skipped)."
+
+        return ImportResponse(
+            status=status_str,
+            imported_count=len(added),
+            source="Imported CSV",
+            message=msg,
+            holdings_added=added
+        )
+    finally:
+        db.close()

@@ -8,33 +8,49 @@ import {
   Bot,
   User,
   ShieldAlert,
-  ChevronRight
+  ChevronRight,
+  Copy,
+  Check,
+  RotateCcw,
+  Trash2,
+  Cpu
 } from 'lucide-react';
 
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'copilot';
+  text: string;
+  time: string;
+  source?: string;
+  suggested?: string[];
+}
+
 export const CopilotDrawer: React.FC = () => {
-  const { isCopilotDrawerOpen, setIsCopilotDrawerOpen, selectedAsset } = useApp();
-  const [messages, setMessages] = useState<Array<{ id: string; sender: 'user' | 'copilot'; text: string; time: string; suggested?: string[] }>>([
+  const { isCopilotDrawerOpen, setIsCopilotDrawerOpen, selectedAsset, aiHealth, user } = useApp();
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-001',
       sender: 'copilot',
       text: (
-        "Hello! I am **ZeroLatency Copilot**, your multi-asset awareness partner.\n\n" +
-        "I have real-time context of your simulated portfolio holdings across **Equities (52%)**, **Sovereign Bonds (18%)**, **Commercial REITs (15%)**, and **InvITs (10%)**.\n\n" +
-        "Ask me to explain any asset instrument, break down distribution yields, or compare cash flows!"
+        "Hello! I am **ZeroLatency Copilot**, your private local AI financial assistant powered by Ollama.\n\n" +
+        "I have context of your multi-asset holdings across **Equities**, **Sovereign Bonds**, **Commercial REITs**, and **InvITs**.\n\n" +
+        "Ask me to explain any financial concept, compare instruments, or breakdown your portfolio!"
       ),
       time: 'Just now',
+      source: 'ZeroLatency Intelligence Engine',
       suggested: [
         "What is a REIT?",
         "Explain InvITs simply.",
         "How are bonds different from equities?",
-        "Show my demo portfolio allocation.",
-        "What percentage is invested in REITs?"
+        "What does P/E ratio mean?",
+        "Show my portfolio allocation."
       ]
     }
   ]);
 
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -47,43 +63,75 @@ export const CopilotDrawer: React.FC = () => {
     }
   }, [messages, isCopilotDrawerOpen]);
 
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleClearHistory = () => {
+    setMessages([
+      {
+        id: `welcome-${Date.now()}`,
+        sender: 'copilot',
+        text: "Conversation cleared. How can I help you explore markets or your portfolio?",
+        time: 'Just now',
+        suggested: [
+          "What is a REIT?",
+          "Explain diversification.",
+          "Show my portfolio allocation."
+        ]
+      }
+    ]);
+  };
+
   const handleSend = async (messageText?: string) => {
     const textToSend = messageText || input;
     if (!textToSend.trim() || isSending) return;
 
-    const userMsg = {
+    const userMsg: ChatMessage = {
       id: Math.random().toString(36).substring(2, 9),
-      sender: 'user' as const,
+      sender: 'user',
       text: textToSend.trim(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const newHistory = [...messages, userMsg];
+    setMessages(newHistory);
     setInput('');
     setIsSending(true);
+
+    // Format bounded conversation history for LLM
+    const apiHistory = newHistory.slice(-8).map((m) => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text,
+    }));
 
     try {
       const response = await api.askCopilot(
         userMsg.text,
-        selectedAsset ? selectedAsset.asset_id : undefined
+        selectedAsset ? (selectedAsset as any).id || selectedAsset.asset_id : undefined,
+        apiHistory
       );
 
-      const botMsg = {
+      const botMsg: ChatMessage = {
         id: Math.random().toString(36).substring(2, 9),
-        sender: 'copilot' as const,
+        sender: 'copilot',
         text: response.reply,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        source: response.source,
         suggested: response.suggested_questions,
       };
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err) {
+    } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           id: Math.random().toString(36).substring(2, 9),
-          sender: 'copilot' as const,
-          text: "I experienced a temporary communication glitch with the analysis engine. Please try asking again!",
+          sender: 'copilot',
+          text: "I experienced a temporary communication hiccup. Please ask your question again.",
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          source: 'ZeroLatency Offline Safety Fallback'
         },
       ]);
     } finally {
@@ -92,6 +140,8 @@ export const CopilotDrawer: React.FC = () => {
   };
 
   if (!isCopilotDrawerOpen) return null;
+
+  const isOllamaOnline = aiHealth?.status === 'ONLINE';
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -104,28 +154,52 @@ export const CopilotDrawer: React.FC = () => {
                 <Sparkles className="w-4 h-4 fill-white" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                  ZERO LATENCY COPILOT
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-                    AWARENESS AI
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <span>ZERO LATENCY COPILOT</span>
+                  <span
+                    className={`inline-flex items-center gap-1 text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase border ${
+                      isOllamaOnline
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-600/30'
+                        : 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border-purple-300 dark:border-purple-600/30'
+                    }`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isOllamaOnline ? 'bg-emerald-500 animate-pulse' : 'bg-purple-500'
+                      }`}
+                    />
+                    <span>{isOllamaOnline ? 'Ollama Online' : 'Local Fallback'}</span>
                   </span>
                 </h3>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Contextual Multi-Asset Education</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                  {isOllamaOnline
+                    ? `Running local model: ${aiHealth?.configured_model || 'llama3.1:8b'}`
+                    : 'Private Deterministic Engine Active'}
+                </p>
               </div>
             </div>
 
-            <button
-              onClick={() => setIsCopilotDrawerOpen(false)}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-all cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleClearHistory}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-all cursor-pointer"
+                title="Clear Chat History"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsCopilotDrawerOpen(false)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Educational Disclaimer Banner */}
+          {/* Educational Disclaimer Banner (Requirement #20) */}
           <div className="px-4 py-2 bg-purple-50 dark:bg-purple-950/40 border-b border-purple-200 dark:border-purple-500/20 flex items-center gap-2 text-[11px] text-purple-700 dark:text-purple-300">
             <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-purple-600 dark:text-purple-400" />
-            <span>Educational information — not financial advice or buy/sell calls.</span>
+            <span>Educational information — never personalized investment advice or buy/sell calls.</span>
           </div>
 
           {/* Chat Messages */}
@@ -154,6 +228,30 @@ export const CopilotDrawer: React.FC = () => {
                       <div className="whitespace-pre-line font-normal space-y-2">
                         {m.text}
                       </div>
+
+                      {/* Bot Source Stamp & Copy Button */}
+                      {!isUser && (
+                        <div className="mt-3 pt-2 border-t border-zinc-200/60 dark:border-white/10 flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                          <span className="truncate max-w-[200px]">{m.source}</span>
+                          <button
+                            onClick={() => handleCopy(m.id, m.text)}
+                            className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-white/10 text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition-all cursor-pointer flex items-center gap-1"
+                            title="Copy response"
+                          >
+                            {copiedId === m.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-500" />
+                                <span className="text-emerald-500">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className={`flex items-center text-[10px] text-zinc-400 ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -189,7 +287,7 @@ export const CopilotDrawer: React.FC = () => {
             {isSending && (
               <div className="flex gap-3 items-center text-xs text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30 p-3 rounded-xl border border-purple-200 dark:border-purple-800/40 w-fit">
                 <Sparkles className="w-4 h-4 animate-spin text-purple-500" />
-                <span>ZeroLatency Copilot is synthesizing portfolio context...</span>
+                <span>ZeroLatency Copilot is synthesizing response...</span>
               </div>
             )}
 
@@ -212,13 +310,13 @@ export const CopilotDrawer: React.FC = () => {
               Explain InvITs
             </button>
             <button
-              onClick={() => handleSend("How are bonds different from equities?")}
+              onClick={() => handleSend("What does P/E ratio mean?")}
               className="text-[11px] whitespace-nowrap px-2 py-0.5 rounded bg-white dark:bg-white/[0.04] text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-300 hover:border-purple-400 border border-zinc-200 dark:border-white/10 cursor-pointer"
             >
-              Bonds vs Equities
+              P/E Ratio
             </button>
             <button
-              onClick={() => handleSend("Show my demo portfolio allocation.")}
+              onClick={() => handleSend("Show my portfolio allocation.")}
               className="text-[11px] whitespace-nowrap px-2 py-0.5 rounded bg-white dark:bg-white/[0.04] text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-300 hover:border-purple-400 border border-zinc-200 dark:border-white/10 cursor-pointer"
             >
               My Allocation
@@ -238,7 +336,7 @@ export const CopilotDrawer: React.FC = () => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about REITs, InvITs, bonds, or your portfolio..."
+                placeholder="Ask any question about markets, instruments, or your portfolio..."
                 className="flex-1 bg-zinc-50 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/15 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 transition-all"
               />
               <button

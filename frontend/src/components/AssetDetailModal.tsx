@@ -1,5 +1,5 @@
 import React from 'react';
-import type { HoldingModel } from '../types';
+import type { HoldingModel, AssetModel, MarketQuote } from '../types';
 import { useApp } from '../context/AppContext';
 import {
   X,
@@ -10,24 +10,50 @@ import {
   ExternalLink,
   Sparkles,
   Building2,
-  Database
+  Database,
+  Bookmark,
+  Check
 } from 'lucide-react';
 
 interface AssetDetailModalProps {
-  asset: HoldingModel | null;
+  asset: HoldingModel | AssetModel | MarketQuote | null;
   onClose: () => void;
 }
 
 export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ asset, onClose }) => {
-  const { setCurrentView, setIsCopilotDrawerOpen } = useApp();
+  const {
+    setCurrentView,
+    setIsCopilotDrawerOpen,
+    setSelectedAsset,
+    toggleWatchlist,
+    isWatchlisted,
+    openPaperTradeModal
+  } = useApp();
 
   if (!asset) return null;
 
-  const isProfit = asset.unrealized_pl >= 0;
+  const isHolding = 'units' in asset && 'invested_value' in asset;
+  const holding = isHolding ? (asset as HoldingModel) : null;
+
+  const currentPrice = ('price' in asset && typeof asset.price === 'number')
+    ? asset.price
+    : (holding ? holding.current_price : 0.0);
+  const change24h = ('change_24h' in asset && typeof asset.change_24h === 'number')
+    ? asset.change_24h
+    : 0.0;
+  const isProfit = holding ? holding.unrealized_pl >= 0 : change24h >= 0;
+
+  const watchlisted = isWatchlisted(asset.id) || isWatchlisted(asset.symbol);
 
   const handleAskCopilot = () => {
-    onClose();
+    setSelectedAsset(asset as any);
     setIsCopilotDrawerOpen(true);
+    onClose();
+  };
+
+  const handlePaperTrade = () => {
+    openPaperTradeModal(asset);
+    onClose();
   };
 
   const getBadgeColor = (type: string) => {
@@ -73,12 +99,26 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ asset, onClo
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-all cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => toggleWatchlist(asset.id)}
+              className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                watchlisted
+                  ? 'bg-purple-600 text-white border-purple-600'
+                  : 'border-zinc-200 dark:border-white/10 text-zinc-500 hover:text-purple-600'
+              }`}
+              title={watchlisted ? 'In Watchlist' : 'Add to Watchlist'}
+            >
+              <Bookmark className="w-4 h-4 fill-current" />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/[0.05] transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}
@@ -87,97 +127,106 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ asset, onClo
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
               <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Market Price</span>
-              <p className="text-lg font-bold text-zinc-900 dark:text-white mt-1">₹{asset.current_price.toLocaleString('en-IN')}</p>
+              <p className="text-lg font-bold text-zinc-900 dark:text-white mt-1">₹{currentPrice.toLocaleString('en-IN')}</p>
               <span className="text-[10px] text-zinc-400">Mark to Market</span>
             </div>
 
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Units Held</span>
-              <p className="text-lg font-bold text-purple-600 dark:text-purple-400 mt-1">{asset.units.toLocaleString('en-IN')}</p>
-              <span className="text-[10px] text-zinc-400">Avg: ₹{asset.avg_buy_price.toLocaleString('en-IN')}</span>
-            </div>
+            {holding ? (
+              <>
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Units Held</span>
+                  <p className="text-lg font-bold text-purple-600 dark:text-purple-400 mt-1">{holding.units.toLocaleString('en-IN')}</p>
+                  <span className="text-[10px] text-zinc-400">Avg: ₹{holding.avg_buy_price.toLocaleString('en-IN')}</span>
+                </div>
 
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Current Value</span>
-              <p className="text-lg font-bold text-zinc-900 dark:text-white mt-1">₹{asset.current_value.toLocaleString('en-IN')}</p>
-              <span className="text-[10px] text-zinc-400">{asset.allocation_percent}% of portfolio</span>
-            </div>
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Current Value</span>
+                  <p className="text-lg font-bold text-zinc-900 dark:text-white mt-1">₹{holding.current_value.toLocaleString('en-IN')}</p>
+                  <span className="text-[10px] text-zinc-400">{holding.allocation_percent}% of portfolio</span>
+                </div>
 
-            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Unrealized P/L</span>
-              <p className={`text-lg font-bold mt-1 flex items-center gap-1 ${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {isProfit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {isProfit ? '+' : ''}₹{asset.unrealized_pl.toLocaleString('en-IN')}
-              </p>
-              <span className={`text-[10px] font-semibold ${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {asset.unrealized_pl_percent > 0 ? '+' : ''}{asset.unrealized_pl_percent}%
-              </span>
-            </div>
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Unrealized P/L</span>
+                  <p className={`text-lg font-bold mt-1 flex items-center gap-1 ${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                    {isProfit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                    {isProfit ? '+' : ''}₹{holding.unrealized_pl.toLocaleString('en-IN')}
+                  </p>
+                  <span className={`text-[10px] font-semibold ${isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                    {holding.unrealized_pl_percent > 0 ? '+' : ''}{holding.unrealized_pl_percent}%
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">24h Movement</span>
+                  <p className={`text-lg font-bold mt-1 flex items-center gap-1 ${isProfit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {isProfit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                    {change24h > 0 ? `+${change24h}%` : `${change24h}%`}
+                  </p>
+                  <span className="text-[10px] text-zinc-400">Daily Momentum</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Yield</span>
+                  <p className="text-lg font-bold text-purple-600 dark:text-purple-400 mt-1">{asset.annual_yield}%</p>
+                  <span className="text-[10px] text-zinc-400">Annualized</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.08]">
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Risk Profile</span>
+                  <p className="text-lg font-bold text-zinc-900 dark:text-white mt-1">{asset.risk_level || 'Moderate'}</p>
+                  <span className="text-[10px] text-zinc-400">SEBI Rating</span>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Custodial Source & Asset Fundamentals */}
+          {/* Fundamentals & Description */}
           <div className="p-4 rounded-xl bg-purple-500/[0.05] border border-purple-500/20 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Database className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               <div>
-                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Custody Source</span>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-white">{asset.source}</p>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Category & Sector</span>
+                <p className="text-sm font-semibold text-zinc-900 dark:text-white">{asset.sector || asset.asset_type}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <Coins className="w-5 h-5 text-amber-500" />
               <div>
-                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Indicative Yield</span>
-                <p className="text-sm font-semibold text-amber-600 dark:text-amber-300">{asset.annual_yield}% / year</p>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Distribution Frequency</span>
+                <p className="text-sm font-semibold text-amber-600 dark:text-amber-300">
+                  {asset.asset_type === 'REIT' || asset.asset_type === 'INVIT' ? 'Quarterly Payouts' : 'Semi-Annual'}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <Shield className="w-5 h-5 text-violet-500" />
               <div>
-                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Risk Profile</span>
-                <p className="text-sm font-semibold text-violet-600 dark:text-violet-300">{asset.risk_level || 'Moderate'}</p>
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Liquidity Score</span>
+                <p className="text-sm font-semibold text-violet-600 dark:text-violet-300">
+                  {('liquidity_score' in asset ? asset.liquidity_score : null) || 'High'}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Educational Multi-Asset Awareness Breakdown */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Multi-Asset Awareness Guide
-            </h4>
-            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.08] text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
-              {asset.asset_type === 'REIT' && (
-                <p>
-                  <strong className="text-purple-600 dark:text-purple-300">Why REITs in your portfolio?</strong> REITs own institutional Grade-A tech parks and office properties. Under SEBI regulations, 90% of distributable rental cash flows must be paid out to unitholders, providing predictable quarterly income alongside real estate asset appreciation.
-                </p>
-              )}
-              {asset.asset_type === 'INVIT' && (
-                <p>
-                  <strong className="text-amber-600 dark:text-amber-300">Why InvITs in your portfolio?</strong> InvITs operate critical national infrastructure like power transmission grids and highway toll stretches. Long-term regulated concession agreements yield steady distributions (~9–10%), amortizing capital while offering regular payouts.
-                </p>
-              )}
-              {asset.asset_type === 'BOND' && (
-                <p>
-                  <strong className="text-emerald-600 dark:text-emerald-300">Why Bonds in your portfolio?</strong> Bonds act as the capital preservation backbone of your holdings. Regular semi-annual coupons provide dependable cash flow while sovereign or AAA status safeguards principal during equity market drawdowns.
-                </p>
-              )}
-              {asset.asset_type === 'EQUITY' && (
-                <p>
-                  <strong className="text-blue-600 dark:text-blue-300">Why Equities in your portfolio?</strong> Equities represent corporate ownership that drives long-term capital compounding and beats inflation over multi-year horizons, complemented by corporate dividends.
-                </p>
-              )}
-              {asset.asset_type === 'OTHER' && (
-                <p>
-                  <strong className="text-indigo-600 dark:text-indigo-300">Why Liquid / Cash Equivalents?</strong> Provides immediate liquidity for sudden cash requirements and market opportunities while yielding overnight interest.
-                </p>
-              )}
+          {/* Description */}
+          {('description' in asset && asset.description) && (
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Instrument Profile
+              </h4>
+              <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed p-3.5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06]">
+                {asset.description}
+              </p>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Modal Footer */}
+        {/* Modal Footer Controls */}
         <div className="p-6 border-t border-zinc-200 dark:border-white/10 flex items-center justify-between gap-3 bg-zinc-50/50 dark:bg-[#0c0b11]">
           <button
             onClick={() => {
@@ -186,23 +235,25 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ asset, onClo
             }}
             className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 hover:text-purple-600 dark:hover:text-purple-300 transition-all cursor-pointer font-medium"
           >
-            <span>Learn in Asset Explorer</span>
+            <span>Learn in Academy</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </button>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-white/[0.05] border border-zinc-200 dark:border-white/10 cursor-pointer"
+              onClick={handlePaperTrade}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/[0.08] hover:bg-zinc-200 dark:hover:bg-white/15 border border-zinc-200 dark:border-white/10 transition-all cursor-pointer flex items-center gap-1.5"
             >
-              Close
+              <Coins className="w-3.5 h-3.5 text-amber-500" />
+              <span>Paper Trade</span>
             </button>
+
             <button
               onClick={handleAskCopilot}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(139,92,246,0.35)] transition-all cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5 fill-white" />
-              <span>Ask Copilot</span>
+              <span>AI Explain</span>
             </button>
           </div>
         </div>

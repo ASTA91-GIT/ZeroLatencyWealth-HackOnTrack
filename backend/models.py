@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
+# ----------------- AUTH MODELS -----------------
+
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -10,17 +12,34 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
 class UserProfile(BaseModel):
     id: str
     name: str
     email: str
     is_demo: bool
+    email_verified: bool = True
     created_at: Optional[str] = None
 
 class AuthResponse(BaseModel):
     token: str
     user: UserProfile
     message: str
+    refresh_token: Optional[str] = None
+
+# ----------------- ASSET & MARKET MODELS -----------------
 
 class AssetModel(BaseModel):
     id: str
@@ -35,6 +54,34 @@ class AssetModel(BaseModel):
     liquidity_score: Optional[str] = None
     price: float
     change_24h: float = 0.0
+
+class MarketQuoteModel(BaseModel):
+    id: str
+    symbol: str
+    name: str
+    asset_type: str
+    category: Optional[str] = None
+    sector: Optional[str] = None
+    description: Optional[str] = None
+    risk_level: Optional[str] = None
+    annual_yield: float = 0.0
+    liquidity_score: Optional[str] = None
+    price: float
+    change_24h: float = 0.0
+    volume_24h: Optional[str] = "1.2M"
+    high_52w: Optional[float] = None
+    low_52w: Optional[float] = None
+
+class MarketOverviewResponse(BaseModel):
+    market_status: str
+    provider: str
+    last_updated: str
+    indices: List[Dict[str, Any]]
+    top_gainers: List[Dict[str, Any]]
+    top_losers: List[Dict[str, Any]]
+    market_breadth: Dict[str, int]
+
+# ----------------- PORTFOLIO MODELS -----------------
 
 class HoldingModel(BaseModel):
     id: str
@@ -86,6 +133,8 @@ class PortfolioSummary(BaseModel):
     last_updated: str
     is_demo: bool = True
 
+# ----------------- GOAL MODELS -----------------
+
 class GoalModel(BaseModel):
     id: str
     user_id: str
@@ -112,6 +161,8 @@ class GoalUpdate(BaseModel):
     current_amount: Optional[float] = None
     time_period: Optional[str] = None
 
+# ----------------- CHAT & COPILOT MODELS -----------------
+
 class ChatRequest(BaseModel):
     message: str
     context_asset_id: Optional[str] = None
@@ -123,9 +174,59 @@ class ChatResponse(BaseModel):
     context_data: Optional[Dict[str, Any]] = None
     source: str = "ZeroLatency Copilot (Deterministic Engine)"
     disclaimer: str = "SIMULATION / DEMO DATA — Educational information only. Not financial advice or investment solicitation."
+    ollama_status: Optional[str] = None
+
+# ----------------- WATCHLIST MODELS -----------------
+
+class WatchlistItem(BaseModel):
+    id: str
+    asset_id: str
+    symbol: str
+    name: str
+    asset_type: str
+    sector: Optional[str] = None
+    price: float
+    change_24h: float
+    annual_yield: float
+    risk_level: Optional[str] = None
+    added_at: str
+
+# ----------------- PAPER TRADING MODELS -----------------
+
+class PaperOrderRequest(BaseModel):
+    asset_id: str
+    order_type: str  # BUY or SELL
+    units: float
+    limit_price: Optional[float] = None
+
+class PaperAccountResponse(BaseModel):
+    user_id: str
+    cash_balance: float
+    currency: str = "INR"
+    holdings_value: float
+    total_portfolio_equity: float
+    unrealized_pl: float
+    is_simulated: bool = True
+    disclaimer: str = "PAPER TRADING / SIMULATED — NO REAL MONEY INVOLVED"
+
+class PaperOrderResponse(BaseModel):
+    success: bool
+    order_id: Optional[str] = None
+    order_type: Optional[str] = None
+    symbol: Optional[str] = None
+    units: Optional[float] = None
+    execution_price: Optional[float] = None
+    total_amount: Optional[float] = None
+    remaining_cash: Optional[float] = None
+    status: Optional[str] = None
+    message: str
+    is_simulated: bool = True
+    disclaimer: str = "PAPER TRADING / SIMULATED — NO REAL MONEY INVOLVED"
+
+# ----------------- IMPORT & INSIGHTS MODELS -----------------
 
 class SimulatedImportRequest(BaseModel):
-    source_name: str # "Broker A", "Broker B", "Depository"
+    source_name: str
     account_identifier: Optional[str] = "DEMO-ACC-9921"
 
 class ImportResponse(BaseModel):
@@ -152,3 +253,13 @@ class PortfolioInsightsResponse(BaseModel):
     income_projections: Dict[str, Any]
     concentration_flags: List[Dict[str, Any]]
     historical_trend: List[HistoricalDataPoint]
+
+# ----------------- STANDARD ERROR MODEL -----------------
+
+class APIErrorDetail(BaseModel):
+    code: str
+    message: str
+
+class APIErrorResponse(BaseModel):
+    success: bool = False
+    error: APIErrorDetail

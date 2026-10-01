@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { FinancialNetwork3D } from '../components/FinancialNetwork3D';
 import {
@@ -15,71 +15,127 @@ import {
   Lock,
   Building,
   Coins,
-  ChevronRight
+  Search,
+  LogIn,
+  UserPlus,
+  ChevronRight,
+  ShieldAlert,
+  GraduationCap
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const { setCurrentView, loginAsDemoUser, loading } = useApp();
+  const { setCurrentView, loginAsDemoUser, loading, isAuthenticated } = useApp();
+  const [quickSearch, setQuickSearch] = useState('');
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentView('markets');
+  };
+
+  const featuredAssets = [
+    { symbol: 'NIFTYBEES', name: 'Nippon Nifty 50 ETF', type: 'EQUITY', price: '₹262.50', change: '+0.85%', yield: '1.2%' },
+    { symbol: 'GS2033-718', name: '7.18% GS 2033 Sovereign Bond', type: 'BOND', price: '₹101.40', change: '+0.05%', yield: '7.18%' },
+    { symbol: 'EMBASSY', name: 'Embassy Office Parks REIT', type: 'REIT', price: '₹375.00', change: '+0.90%', yield: '6.80%' },
+    { symbol: 'PGINVIT', name: 'PowerGrid Infrastructure Trust', type: 'INVIT', price: '₹101.20', change: '+0.30%', yield: '10.40%' },
+  ];
 
   return (
     <div className="space-y-24 pb-20 text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
-      {/* 1. HERO SECTION WITH 3D INTERACTIVE NETWORK */}
+      {/* 1. HERO SECTION WITH 3D INTERACTIVE NETWORK & PRIMARY CTAs */}
       <section className="relative pt-12 sm:pt-20 pb-16 overflow-hidden">
-        {/* Subtle ambient lighting */}
+        {/* Ambient background glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-purple-600/10 dark:bg-purple-600/15 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Column: Headlines & Call to Actions */}
+          {/* Left Column: Headlines & Primary Call to Actions */}
           <div className="lg:col-span-6 space-y-6 text-left relative z-10">
             {/* Eyebrow */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-purple-700 dark:text-purple-300 text-xs font-semibold tracking-wider uppercase font-mono">
               <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-              <span>SMARTER WEALTH. ZERO FRICTION.</span>
+              <span>THE ZERO LATENCY WEALTH OPERATING SYSTEM</span>
             </div>
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-[1.08] text-zinc-900 dark:text-white">
-              Your Wealth.{' '}
+              Smarter Wealth.{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-500 dark:from-purple-400 dark:via-violet-400 dark:to-indigo-300">
-                Your Edge.
+                Zero Friction.
               </span>
             </h1>
 
             {/* Subheading */}
             <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-xl">
-              ZeroLatency Wealth unifies equities, sovereign bonds, commercial REITs, and infrastructure InvITs into one real-time financial command center.
+              Unify equities, sovereign bonds, commercial REITs, and infrastructure InvITs into one real-time financial command center powered by private local AI.
             </p>
 
-            {/* Primary & Secondary CTAs */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Primary Four CTAs (Requirement #1 & #41) */}
+            <div className="pt-2 flex flex-wrap items-center gap-3">
               <button
-                onClick={loginAsDemoUser}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_25px_rgba(139,92,246,0.35)] hover:shadow-[0_0_35px_rgba(139,92,246,0.5)] transform hover:-translate-y-0.5 transition-all cursor-pointer"
+                onClick={() => setCurrentView('markets')}
+                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_25px_rgba(139,92,246,0.35)] hover:shadow-[0_0_35px_rgba(139,92,246,0.5)] transform hover:-translate-y-0.5 transition-all cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 fill-white" />
-                <span>Get Started — Explore Demo</span>
+                <Compass className="w-4 h-4 fill-white" />
+                <span>Explore Markets</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
-                onClick={() => setCurrentView('architecture')}
-                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/40 hover:text-purple-600 dark:hover:text-white transition-all cursor-pointer"
+                onClick={() => setCurrentView('signup')}
+                className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-zinc-900 dark:text-white bg-zinc-100 dark:bg-white/[0.08] border border-zinc-200 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/40 hover:text-purple-600 transition-all cursor-pointer"
               >
-                <Workflow className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <span>Explore Platform</span>
+                <UserPlus className="w-4 h-4 text-purple-500" />
+                <span>Create Account</span>
+              </button>
+
+              <button
+                onClick={() => setCurrentView('login')}
+                className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-300 transition-all cursor-pointer"
+              >
+                <LogIn className="w-4 h-4 text-zinc-400" />
+                <span>Log In</span>
+              </button>
+
+              {/* Secondary Demo Mode CTA */}
+              <button
+                onClick={loginAsDemoUser}
+                disabled={loading}
+                className="flex items-center justify-center gap-1.5 px-4 py-3.5 rounded-xl text-xs font-mono font-bold text-purple-600 dark:text-purple-300 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 transition-all cursor-pointer"
+                title="1-Click Judge & Evaluation Demo Mode"
+              >
+                <Sparkles className="w-3.5 h-3.5 fill-current" />
+                <span>Try Demo</span>
               </button>
             </div>
 
-            {/* Quick trust metrics */}
-            <div className="pt-4 flex items-center gap-6 text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+            {/* Quick Search Widget */}
+            <form onSubmit={handleSearchSubmit} className="pt-2 max-w-md">
+              <div className="relative">
+                <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search stocks, bonds, REITs, or InvITs (e.g. NIFTY, Embassy, 7.18% GS)..."
+                  value={quickSearch}
+                  onChange={(e) => setQuickSearch(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 focus:border-purple-500 rounded-xl pl-10 pr-24 py-2.5 text-xs text-zinc-900 dark:text-white focus:outline-none transition-all placeholder:text-zinc-400"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-purple-600 text-white font-bold text-[11px] hover:bg-purple-500 transition-all cursor-pointer"
+                >
+                  Explore
+                </button>
+              </div>
+            </form>
+
+            {/* Trust Badges */}
+            <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-zinc-500 dark:text-zinc-400 font-mono">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                ₹8,42,500 Canonical Benchmark
+                ₹10,00,000 Simulated Paper Capital
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3.5 h-3.5 text-purple-500" />
-                4 SEBI Asset Pillars
+                Private Local Ollama AI (Zero Hosted Token Leakage)
               </span>
             </div>
           </div>
@@ -109,285 +165,224 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. THE FRAGMENTATION PROBLEM SECTION */}
-      <section className="space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs uppercase font-mono tracking-widest text-purple-600 dark:text-purple-400 font-bold">
-            THE RETAIL INVESTING CHALLENGE
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Why Multi-Asset Awareness is Broken Today
-          </h2>
-          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Retail investors typically manage fragmented broker accounts with near-total concentration in equities, leaving stable alternative yields undiscovered.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="fintech-card p-6 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
-              <Layers className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Fragmented Custody</h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Equities on Broker A, REITs on Broker B, and Sovereign Bonds in depository records. Investors cannot calculate total net worth or unified cash flows.
-            </p>
-          </div>
-
-          <div className="fintech-card p-6 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-600 dark:text-violet-400">
-              <BarChart3 className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Single-Asset Concentration</h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Over 85% of retail wealth is heavily concentrated in volatile stocks, making portfolios vulnerable to market drawdowns without defensive anchors.
-            </p>
-          </div>
-
-          <div className="fintech-card p-6 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <Coins className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Alternative Yield Blindspot</h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Grade-A commercial REITs and infrastructure InvITs disburse 90% of net cash flow (6.5%–10.5% yields), yet remain misunderstood by everyday investors.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. HOW ZERO LATENCY WORKS (4-STEP PIPELINE) */}
-      <section className="fintech-card p-8 sm:p-10 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/10 pb-6">
+      {/* 2. FEATURED STOCKS & LIVE MARKET PREVIEW (Requirement #1) */}
+      <section className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <span className="text-xs font-mono uppercase tracking-widest text-purple-600 dark:text-purple-400 font-bold">
-              INGESTION & INTELLIGENCE PIPELINE
+              MARKET DISCOVERY
             </span>
-            <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mt-1">
-              How ZeroLatency Normalizes Your Wealth
-            </h3>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900 dark:text-white mt-1">
+              Featured Instruments Across 4 Asset Pillars
+            </h2>
           </div>
           <button
-            onClick={() => setCurrentView('architecture')}
-            className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer"
+            onClick={() => setCurrentView('markets')}
+            className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <span>Interactive Architecture Map</span>
+            <span>View Full Market Explorer</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 space-y-2">
-            <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 font-bold">PHASE 01</span>
-            <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Multi-Source Ingestion</h4>
+          {featuredAssets.map((asset) => (
+            <div
+              key={asset.symbol}
+              onClick={() => setCurrentView('markets')}
+              className="p-5 rounded-2xl bg-white dark:bg-[#121118] border border-zinc-200 dark:border-white/[0.08] hover:border-purple-500/50 shadow-sm transition-all cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-base font-black text-zinc-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  {asset.symbol}
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+                  {asset.type}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1">
+                {asset.name}
+              </p>
+              <div className="mt-4 flex items-baseline justify-between pt-3 border-t border-zinc-100 dark:border-white/[0.04]">
+                <span className="text-lg font-bold font-mono text-zinc-900 dark:text-white">
+                  {asset.price}
+                </span>
+                <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                  {asset.change}
+                </span>
+              </div>
+              <div className="mt-2 text-[10px] font-mono text-purple-600 dark:text-purple-400">
+                Indicative Yield: {asset.yield}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. MULTI-ASSET PILLARS EDUCATION (Requirement #1) */}
+      <section className="space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-mono uppercase tracking-widest text-purple-600 dark:text-purple-400 font-bold">
+            ARCHITECTURAL DIVERSIFICATION
+          </span>
+          <h2 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-white">
+            Beyond Pure Stocks. A Resilient Portfolio Engine.
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
+            ZeroLatency Wealth models the 4 fundamental pillars regulated under Indian capital markets to protect and compound wealth.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#121118] border border-blue-500/20 shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+              EQ
+            </div>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Equities & ETFs</h3>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Pulls holdings from Broker A, Broker B, Central Depositories (CDSL/NSDL), and CSV statements.
+              Long-term growth engine capturing corporate profit expansion and dividend income across broad bluechip indices.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 space-y-2">
-            <span className="text-[10px] font-mono text-violet-600 dark:text-violet-400 font-bold">PHASE 02</span>
-            <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Data Normalization</h4>
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#121118] border border-emerald-500/20 shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+              BD
+            </div>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Sovereign Bonds</h3>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Standardizes disparate tickers, lots, denominations, and acquisition cost bases into a uniform schema.
+              RBI-backed sovereign debt and institutional AAA bonds providing guaranteed semi-annual coupons and capital preservation.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 space-y-2">
-            <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 font-bold">PHASE 03</span>
-            <h4 className="text-sm font-bold text-zinc-900 dark:text-white">SEBI Classification</h4>
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#121118] border border-purple-500/20 shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+              RT
+            </div>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Commercial REITs</h3>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Accurately categorizes instruments into Equities, Sovereign Debt, Commercial REITs, and InvITs.
+              Fractional ownership of Grade-A IT parks. Mandatory 90% cash flow distribution delivers quarterly rental yields of 6.5–7.5%.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 space-y-2">
-            <span className="text-[10px] font-mono text-purple-600 dark:text-purple-300 font-bold">PHASE 04</span>
-            <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Copilot Awareness</h4>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              ZeroLatency Copilot synthesizes live holdings to explain distributions, risk factors, and mechanics.
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#121118] border border-amber-500/20 shadow-sm space-y-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+              IN
+            </div>
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Infrastructure InvITs</h3>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Interstate power grids and toll highways generating inflation-linked tariffs with attractive 9.5–10.5% cash yields.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 4. UNDERSTAND EVERY ASSET (FOUR PILLARS) */}
-      <section className="space-y-8">
-        <div className="text-center max-w-3xl mx-auto space-y-2">
-          <span className="text-xs uppercase font-mono tracking-widest text-purple-600 dark:text-purple-400 font-bold">
-            MULTI-ASSET UNIFICATION
+      {/* 4. LOCAL AI COPILOT PREVIEW SECTION (Requirement #1 & #15) */}
+      <section className="p-8 sm:p-12 rounded-3xl bg-zinc-50 dark:bg-[#121118] border border-purple-500/30 shadow-2xl relative overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-xs font-mono font-bold">
+              <Sparkles className="w-3.5 h-3.5 fill-current" />
+              <span>PRIVATE LOCAL AI ENGINE (OLLAMA)</span>
+            </div>
+            <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">
+              An AI Copilot That Respects Your Financial Privacy
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Unlike cloud services that transmit your financial net worth to external third-party vendors, ZeroLatency Wealth runs locally via <strong>Ollama</strong>. Ask arbitrary financial questions, analyze yields, or explore your portfolio without API token limits.
+            </p>
+            <div className="space-y-2 pt-2 text-xs text-zinc-700 dark:text-zinc-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-purple-500" />
+                <span>Zero external API token quotas or per-prompt cloud bills</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-purple-500" />
+                <span>Portfolio-aware context with safe guardrails against speculative tips</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-purple-500" />
+                <span>Instant fallback to deterministic financial engine when offline</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 p-5 rounded-2xl bg-white dark:bg-[#0c0b12] border border-zinc-200 dark:border-white/10 shadow-lg space-y-3 font-mono text-xs">
+            <div className="flex items-center justify-between text-[11px] text-zinc-400 border-b border-zinc-100 dark:border-white/10 pb-2">
+              <span>PROMPT SIMULATION</span>
+              <span className="text-purple-400">OLLAMA 3.1:8B</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-zinc-100 dark:bg-white/[0.04] text-zinc-900 dark:text-white">
+              <strong className="text-purple-500">You:</strong> "Why are REIT yields higher than standard stocks?"
+            </div>
+            <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20 text-zinc-800 dark:text-zinc-200 text-[11px] leading-relaxed">
+              <strong className="text-purple-400 block mb-1">ZeroLatency Copilot:</strong>
+              Under SEBI and international regulations, REITs must disburse at least 90% of net distributable cash flows to unitholders. Because they distribute contractual commercial rents directly rather than reinvesting capital into expansion, their dividend yields typically range between 6.5%–7.5%.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. ENTERPRISE SECURITY & DATA PRIVACY (Requirement #1 & #37) */}
+      <section className="space-y-6">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+            ZERO TRUST SECURITY
           </span>
-          <h2 className="text-3xl font-extrabold tracking-tight">
-            Four Essential Pillars of Modern Wealth
+          <h2 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-white">
+            Built from the Ground Up for Data Isolation
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Equity */}
-          <div className="fintech-card p-5 space-y-3 border-l-4 border-l-blue-500">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-500/20">
-                EQUITY (52%)
-              </span>
-              <span className="text-xs font-mono font-bold text-blue-500">~1.5% Yield</span>
-            </div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Capital Compounding</h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Ownership stakes in premier bluechip enterprises driving multi-year capital compounding.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#121118] border border-zinc-200 dark:border-white/10 space-y-2">
+            <Lock className="w-6 h-6 text-purple-500" />
+            <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Argon2id Password Storage</h4>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              State-of-the-art memory-hard password hashing designed to withstand modern GPU/ASIC brute force attacks.
             </p>
           </div>
 
-          {/* Bonds */}
-          <div className="fintech-card p-5 space-y-3 border-l-4 border-l-emerald-500">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
-                BONDS (18%)
-              </span>
-              <span className="text-xs font-mono font-bold text-emerald-500">~7.2% Yield</span>
-            </div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Sovereign Debt Anchor</h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Guaranteed semi-annual coupon distributions and capital preservation backed by RBI / Sovereign debt.
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#121118] border border-zinc-200 dark:border-white/10 space-y-2">
+            <ShieldCheck className="w-6 h-6 text-emerald-500" />
+            <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Strict Tenant Isolation</h4>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              User A never sees User B's portfolio or orders. User IDs are extracted strictly from cryptographic JWT sessions.
             </p>
           </div>
 
-          {/* REITs */}
-          <div className="fintech-card p-5 space-y-3 border-l-4 border-l-purple-500">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border border-purple-500/20">
-                REITs (15%)
-              </span>
-              <span className="text-xs font-mono font-bold text-purple-500">~7.0% Yield</span>
-            </div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Commercial Tech Parks</h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Institutional ownership of Grade-A office campuses leased to Fortune 500 multinationals with 90% payout.
-            </p>
-          </div>
-
-          {/* InvITs */}
-          <div className="fintech-card p-5 space-y-3 border-l-4 border-l-amber-500">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300 border border-amber-500/20">
-                InvITs (10%)
-              </span>
-              <span className="text-xs font-mono font-bold text-amber-500">~10.2% Yield</span>
-            </div>
-            <h3 className="text-base font-bold text-zinc-900 dark:text-white">Essential Utilities</h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Regulated transmission power grids and national expressways delivering inflation-linked cash flows.
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#121118] border border-zinc-200 dark:border-white/10 space-y-2">
+            <Coins className="w-6 h-6 text-amber-500" />
+            <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Risk-Free Paper Trading</h4>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              Real-time portfolio recalculations and simulated order execution without risking real money or requiring brokerage keys.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 5. DASHBOARD PREVIEW & COPILOT HIGHLIGHT */}
-      <section className="fintech-card p-8 sm:p-12 space-y-8 relative overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          <div className="space-y-4">
-            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/25 font-bold uppercase">
-              ZERO LATENCY COPILOT
-            </span>
-            <h3 className="text-3xl font-black text-zinc-900 dark:text-white leading-tight">
-              An intelligent awareness partner for your entire portfolio.
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              Ask questions about your holdings in natural language. Copilot understands your exact multi-broker balance, explains distribution mechanics, and observes concentration risks without offering speculative advice.
-            </p>
-
-            <div className="space-y-2 text-xs text-zinc-700 dark:text-zinc-300 pt-2">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <span>Deterministic educational fallback — runs 100% offline without API keys</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <span>Strict anti-advice guardrail — neutral awareness instead of stock recommendations</span>
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <button
-                onClick={loginAsDemoUser}
-                className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-all cursor-pointer"
-              >
-                Try Copilot in Demo Mode
-              </button>
-            </div>
-          </div>
-
-          {/* Interactive Simulated Copilot Dialogue Card */}
-          <div className="p-6 rounded-2xl bg-zinc-900 text-zinc-100 border border-purple-500/30 space-y-4 font-mono text-xs shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 text-[10px] text-zinc-400">
-              <span>COPILOT SESSION CONTEXT</span>
-              <span className="text-purple-400 font-bold">₹8,42,500 BENCHMARK</span>
-            </div>
-
-            <div className="flex justify-end">
-              <div className="bg-purple-600/30 border border-purple-500/40 p-3 rounded-xl rounded-tr-none text-purple-200">
-                What percentage of my portfolio is in commercial REITs?
-              </div>
-            </div>
-
-            <div className="flex justify-start">
-              <div className="bg-white/[0.05] border border-white/10 p-3.5 rounded-xl rounded-tl-none space-y-2 text-zinc-300">
-                <p className="font-semibold text-white">
-                  REIT exposure accounts for approximately <span className="text-purple-400 font-bold">14.9% (₹1,25,435)</span> of your demo holdings.
-                </p>
-                <p className="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                  You hold 3 institutional commercial real estate trusts across Broker A, Broker B, and CSV statements with an average indicative yield of 7.0%.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-2 flex flex-wrap gap-2 text-[10px]">
-              <span className="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">
-                "Explain InvITs simply"
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">
-                "Bonds vs Equities"
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. CALL TO ACTION & FOOTER */}
-      <section className="text-center py-12 space-y-6">
-        <h3 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white">
-          Ready to experience frictionless multi-asset wealth?
-        </h3>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto">
-          Explore the complete working prototype with preloaded benchmark demo data.
+      {/* 6. BOTTOM CONVERSION SECTION */}
+      <section className="text-center p-12 rounded-3xl bg-gradient-to-b from-purple-900/30 to-[#121118] border border-purple-500/30 space-y-6">
+        <h2 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight max-w-2xl mx-auto">
+          Start Exploring Multi-Asset Markets with Zero Friction
+        </h2>
+        <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto">
+          Join ZeroLatency Wealth today. Experience live market explorer, simulated paper trading, and local AI assistance.
         </p>
-
-        <div>
+        <div className="flex flex-wrap items-center justify-center gap-4">
           <button
-            onClick={loginAsDemoUser}
-            className="px-8 py-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-all cursor-pointer"
+            onClick={() => setCurrentView('signup')}
+            className="px-8 py-3.5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-[0_0_25px_rgba(168,85,247,0.4)] transition-all cursor-pointer"
           >
-            Launch Interactive Demo Mode
+            Create Your Free Account
+          </button>
+          <button
+            onClick={() => setCurrentView('markets')}
+            className="px-7 py-3.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.05] border border-zinc-200 dark:border-white/10 hover:border-purple-400 transition-all cursor-pointer"
+          >
+            Browse Public Markets
           </button>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="pt-10 border-t border-zinc-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 dark:text-zinc-400">
-        <div>
-          © 2026 ZeroLatency Wealth • Hack on Track Round 1 Prototype
-        </div>
-        <div className="flex items-center gap-6">
-          <button onClick={() => setCurrentView('architecture')} className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-            Architecture
-          </button>
-          <button onClick={() => setCurrentView('security')} className="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-            Security & Privacy
-          </button>
-          <button onClick={loginAsDemoUser} className="text-purple-600 dark:text-purple-400 font-bold hover:underline">
-            Launch Demo
-          </button>
-        </div>
-      </footer>
     </div>
   );
 };

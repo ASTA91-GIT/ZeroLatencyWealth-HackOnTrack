@@ -1,53 +1,77 @@
 # ZERO LATENCY WEALTH — Application Flow
 
-> **"One Portfolio. Every Asset. Clearer Understanding."**  
-> **Hack on Track Round 1 — Problem Statement 2 (PS2)**  
-> **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)  
+> **"One Portfolio. Every Asset. Clearer Understanding."**
+> **Production Fintech Web Platform & Wealth Operating System**
+> **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)
 > **Source of Truth:** Current Codebase Implementation
 
 ---
 
-## 1. High-Level Navigation & Flow Diagram
+## 1. High-Level Navigation & Fintech Flow Diagram
 
 ```
-                                  LANDING PAGE (/)
-                          (3D WebGL Network, Hero, Pipeline)
-                                         │
-                 ┌───────────────────────┴───────────────────────┐
-                 │                                               │
-                 ▼                                               ▼
-         [Explore Demo]                                   [Sign In / Register]
-                 │                                               │
-                 ▼                                               ▼
-     Demo Authentication Flow                         Session Auth (JWT)
-   (POST /api/auth/demo -> ₹8.42L)                               │
-                 │                                               │
-                 └───────────────────────┬───────────────────────┘
-                                         ▼
-                               FINANCIAL DASHBOARD
-                         (KPIs, Donut & Area Curves)
-                                         │
-        ┌──────────────┬──────────────┬──┴───────────┬──────────────┬──────────────┐
-        ▼              ▼              ▼              ▼              ▼              ▼
-     UNIFIED         ASSET        PORTFOLIO      PORTFOLIO        GOALS &       LEARNING
-    PORTFOLIO      EXPLORER       INSIGHTS        IMPORT        MILESTONES       CENTER
-   (Holdings &    (4 Pillars &    (Risk/Yield   (Simulated &    (Simulated     (Sandbox &
-   Deep Dives)     Mechanics)     Projections)   CSV Upload)     Targets)      Comparison)
-        │              │                                                           │
-        └───────┬──────┴───────────────────────────────────────────────────────────┘
-                ▼
-        ASSET DETAIL MODAL ─────────────► ZERO LATENCY COPILOT
-      (Underlying Mechanics)              (Deterministic AI Assistant)
-                │                                    │
-                └──────────────────┬─────────────────┘
-                                   ▼
-                          GLOBAL SYSTEM VIEWS
-                  ┌────────────────┴────────────────┐
-                  ▼                                 ▼
-         ARCHITECTURE VIEW               SECURITY & PRIVACY
-      (10 Subsystems & JSON)             (Safeguards Matrix)
-                  │                                 │
-                  └────────────────┬────────────────┘
+                              PUBLIC WEBSITE (/)
+                    (3D WebGL Mesh, Market Preview, Search)
+                                     │
+           ┌─────────────────────────┼─────────────────────────┐
+           ▼                         ▼                         ▼
+   [Explore Markets]         [Explore Assets]          [Academy Learning]
+     (/markets)                 (/assets)                 (/learning)
+           │                         │                         │
+           └─────────────────────────┼─────────────────────────┘
+                                     ▼
+                      PUBLIC MARKET & STOCK EXPLORER
+                 (Search, Quotes, 4 Pillars, Mini-Charts)
+                                     │
+                 Want to Invest / Watchlist / Use Wealth OS?
+                                     │
+                                     ▼
+                         AUTHENTICATION GATEKEEPER
+                   ┌─────────────────┴─────────────────┐
+                   ▼                                   ▼
+             [Log In (/login)]               [Sign Up (/signup)]
+           (Argon2id + Remember)           (Entropy Strength + Terms)
+                   │                                   │
+                   └─────────────────┬─────────────────┘
+                                     │ (Or 1-Click Judge Demo Mode)
+                                     ▼
+                          AUTHENTICATED WEALTH OS
+                        (Strict Tenant Data Isolation)
+                                     │
+         ┌──────────────┬────────────┼────────────┬──────────────┬──────────────┐
+         ▼              ▼            ▼            ▼              ▼              ▼
+     FINANCIAL       UNIFIED     WATCHLIST &    PORTFOLIO      GOALS &       CSV IMPORT
+     DASHBOARD      PORTFOLIO    PAPER DESK     INSIGHTS     MILESTONES     & BROKER SYNC
+    (KPIs & Net     (Holdings     (Simulated     (Yield /     (Targets &     (5MB Guard &
+     Worth MTM)     Isolation)     ₹10L Cash)   Risk Matrix)   Tracking)      Column Map)
+         │              │            │            │              │              │
+         └──────────────┴────────────┼────────────┴──────────────┴──────────────┘
+                                     ▼
+                     PRIVATE LOCAL AI COPILOT (OLLAMA)
+                (No External AI API Keys • Port 11434 • Streaming
+                 Conversational Memory • Offline Deterministic Fallback)
+```
+
+---
+
+## 2. Visitor vs Authenticated User Journey
+
+### Public Visitor Flow:
+1. **Landing Discovery:** Open `/` without being forced to authenticate. Explore multi-asset hero, 3D interactive topology, featured instruments, and instant search.
+2. **Public Market Discovery (`/markets`):** Search Indian capital market quotes across Equities, Sovereign Bonds, REITs, and InvITs with live market status and category filters.
+3. **Asset Detail Inspection:** Review price, 24h momentum, distribution frequency, yield, and risk rating.
+4. **Interactive Action Gating:** Clicking "Trade" or "Add to Watchlist" triggers an elegant non-blocking Auth Prompt: *"Create your free account to continue"* with options for Sign Up, Log In, or 1-Click Demo Mode.
+
+### Authenticated Wealth OS Journey:
+1. **Registration / Login:** Secure authentication using **Argon2id** password hashing, JWT access tokens, and refresh token rotation.
+2. **Isolated Portfolio:** User A's holdings, goals, and orders are 100% strictly isolated from User B.
+3. **Watchlist & Simulated Paper Desk:** Test investment strategies risk-free with **₹10,00,000 simulated paper capital**.
+4. **Private Local AI Copilot:** Ask arbitrary financial questions ("What is a REIT?", "Explain P/E ratio", "Explain my portfolio"). Powered exclusively by local **Ollama** with zero external cloud API keys or token limits.
+
+### Global System Views:
+- **Architecture View:** Interactive visual topology of 10 micro-services, services catalog, and system JSON dump.
+- **Security & Privacy:** Matrix of enterprise safeguards, Argon2id encryption, and tenant boundary verification.
+- **Settings & Preferences:** Light/Dark theme toggle, currency selection, and canonical demo data reset.
                                    ▼
                              SETTINGS VIEW
                     (Currency, Theme, Reset Benchmark)
@@ -217,7 +241,7 @@
 ### Simulated Automated Multi-Broker Sync
 1. User selects a custody partner: `Broker A`, `Broker B`, or `Depository`.
 2. Clicks **"Simulate Automated Aggregation"**.
-3. Frontend triggers an animated 5-step status pipeline:  
+3. Frontend triggers an animated 5-step status pipeline:
    `CONNECTING` $\rightarrow$ `FETCHING` $\rightarrow$ `NORMALIZING` $\rightarrow$ `CLASSIFYING` $\rightarrow$ `READY`.
 4. API call: `POST /api/import/demo` with `source_name`.
 5. Backend pulls mock instruments, deduplicates against master assets, updates unit balances, and recalculates portfolio summary.

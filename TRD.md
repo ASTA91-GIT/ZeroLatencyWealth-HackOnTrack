@@ -1,15 +1,15 @@
 # ZERO LATENCY WEALTH — Technical Requirements Document
 
-> **"One Portfolio. Every Asset. Clearer Understanding."**  
-> **Hack on Track Round 1 — Problem Statement 2 (PS2):** Super App for Unified Multi-Asset Investing & Awareness  
-> **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)  
-> **Version:** 1.0.0 (Production Hackathon Baseline)  
-> **Status:** CURRENT SOURCE OF TRUTH
+> **"One Portfolio. Every Asset. Clearer Understanding."**
+> **Hack on Track Round 1 — Problem Statement 2 (PS2):** Super App for Unified Multi-Asset Investing & Awareness
+> **Repository:** [https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack](https://github.com/ASTA91-GIT/ZeroLatencyWealth-HackOnTrack)
+> **Version:** 2.0.0 (Production-Ready Operable Fintech Architecture)
+> **Status:** CURRENT SOURCE OF TRUTH (PRODUCTION TRANSFORMED)
 
 ---
 
 ## 1. Product Overview
-**ZeroLatency Wealth** is a high-frequency, responsive financial web application designed to solve retail investor portfolio fragmentation and multi-asset awareness gaps in the Indian investment ecosystem. The platform serves as a unified terminal consolidating investments across **Equities**, **Corporate & Sovereign Bonds**, **Real Estate Investment Trusts (REITs)**, and **Infrastructure Investment Trusts (InvITs)**, paired with an intelligent, deterministic educational AI Copilot.
+**ZeroLatency Wealth** is a high-frequency, responsive financial web application designed to solve retail investor portfolio fragmentation and multi-asset awareness gaps in the Indian investment ecosystem. The platform serves as a unified terminal consolidating investments across **Equities**, **Corporate & Sovereign Bonds**, **Real Estate Investment Trusts (REITs)**, and **Infrastructure Investment Trusts (InvITs)**, paired with an intelligent, privacy-first **Local AI Copilot (powered by local Ollama without external cloud API dependencies)**, an operable **Paper Trading Desk**, a public **Market & Asset Explorer**, and enterprise-grade multi-tenant data isolation.
 
 ---
 
@@ -22,26 +22,27 @@ Retail investors face two structural hurdles:
 
 ## 3. Product Objectives
 - **Consolidation:** Ingest and normalize multi-source holding records into a unified portfolio command center.
-- **Demystification:** Provide intuitive multi-asset awareness tools, statutory return explanations, yield sandboxes, and visual asset mechanics.
+- **Demystification & Public Discovery:** Provide an unauthenticated public exploration experience with real-time stock/market quotes, statutory yield mechanics, and educational pillars before account creation.
+- **Privacy-First Local AI:** Run a genuine conversational AI chatbot powered by a self-hosted local LLM (Ollama) with context memory and zero external API keys or cloud tokens.
+- **Risk-Free Operability:** Provide an operable simulated Paper Trading desk (₹10,00,000 virtual balance) with live order placement, transaction logging, and real-time portfolio recalculation.
 - **Compliance & Safety:** Maintain deterministic AI guardrails strictly barring speculative buy/sell recommendations.
-- **Zero Barrier Demo:** Offer an instant 1-click evaluation mode loaded with an official ₹8,42,500 canonical benchmark portfolio requiring zero API keys or external signups.
+- **Zero Barrier Demo:** Offer an instant 1-click evaluation mode loaded with an official ₹8,42,500 canonical benchmark portfolio alongside real multi-user account registration.
 
 ---
 
 ## 4. Scope
-- **In Scope (Implemented):**
-  - Consolidated multi-broker portfolio tracking (₹8,42,500 canonical benchmark).
-  - Four distinct asset pillars: Equities, Bonds, REITs, InvITs (plus Liquid Cash).
-  - Three.js WebGL 3D financial network hero animation with mouse parallax and mobile scaling.
-  - Complete Light Mode + Dark Mode design system with persistent state and adaptive Recharts.
-  - Simulated multi-broker automated sync (Broker A, Broker B, Depository) and real client-side CSV statement parsing.
-  - Deterministic AI Copilot with regulatory anti-advice guardrails and contextual holding awareness.
-  - Interactive multi-asset allocation sandbox and historical income forecasts.
-  - Local relational SQLite persistence with instantaneous canonical reset.
-- **Out of Scope / Production Roadmap (Conceptual):**
-  - Direct live OAuth connection to SEBI Account Aggregator (AA) ecosystem (Setu/Anumati).
-  - Automated broker API trade execution or order routing.
-  - Real-time depository CAS XML parsing with digital certificate validation.
+- **In Scope (Implemented & Production-Ready):**
+  - Public unauthenticated portal: Landing page, `/markets` stock explorer, asset classes, and learning curriculum.
+  - Non-blocking gatekeeper prompt modal redirecting unauthenticated visitors to Sign Up / Log In when accessing Wealth OS actions.
+  - Production Authentication: Argon2id password hashing, JWT access/refresh token rotation, email verification, password reset tokens, and session termination.
+  - Multi-Tenant Isolation: Per-user portfolios, transactions, holdings, watchlists, paper accounts, and audit logging.
+  - Local Ollama AI integration: Local conversational assistant with bounded conversation memory, portfolio context awareness, educational financial guardrails, and deterministic fallback.
+  - Market Data Provider Abstraction: `MarketDataProvider` protocol supporting `demo` and `real` providers without exposing credentials to frontend.
+  - Personal Watchlists & Paper Trading: ₹10,00,000 cash balance, BUY/SELL order ticket execution, holding synchronization, and order history.
+  - Dual Database Support: SQLite for rapid local dev + PostgreSQL for enterprise production, backed by SQLAlchemy ORM and Alembic migrations.
+  - Hackathon Demo Mode: Preserved 1-click evaluation access with canonical ₹8,42,500 benchmark.
+  - Security Hardening: Sliding-window rate limiting, security headers (CSP, HSTS, X-Frame-Options), 5MB CSV validation, and strict CORS.
+  - Docker Containerization: Production & dev multi-container Docker Compose with Frontend, Backend, PostgreSQL, and optional Ollama.
 
 ---
 
@@ -54,11 +55,19 @@ Retail investors face two structural hurdles:
 | **FR-03** | Holdings Table | Comprehensive filterable table with asset class filtering, search, and custody breakdown. | **STATUS: IMPLEMENTED** |
 | **FR-04** | Asset Deep-Dive | Interactive modal detailing risk rating, indicated yield, liquidity tier, and distribution rules. | **STATUS: IMPLEMENTED** |
 | **FR-05** | Educational Copilot | Chat assistant responding to natural language questions with holding awareness and advice blocking. | **STATUS: IMPLEMENTED** |
-| **FR-06** | Ingestion Simulator | Simulated multi-broker synchronization pipes and real CSV file statement parser. | **STATUS: IMPLEMENTED** |
+| **FR-06** | Ingestion Simulator | Simulated multi-broker synchronization pipes and validated CSV statement parser (5MB limit). | **STATUS: IMPLEMENTED** |
 | **FR-07** | Goals Engine | Simulated life milestone funding calculator powered by projected multi-asset income. | **STATUS: IMPLEMENTED** |
 | **FR-08** | Learning Sandbox | Real-time slider simulator recalculating estimated weighted yields across user-defined asset mixes. | **STATUS: IMPLEMENTED** |
 | **FR-09** | Benchmark Reset | 1-click atomic restoration of canonical evaluation portfolio state. | **STATUS: IMPLEMENTED** |
 | **FR-10** | Live Account Aggregator | Production consent-driven AA integration via RBI/SEBI standard APIs. | **STATUS: CONCEPTUAL** |
+| **FR-11** | Public Market Explorer | Public unauthenticated `/markets` route with live quotes, sector filters, search, and asset details. | **STATUS: IMPLEMENTED** |
+| **FR-12** | Production Auth | Argon2id hashing, JWT access/refresh tokens, signup, login, password reset, email verification. | **STATUS: IMPLEMENTED** |
+| **FR-13** | User Data Isolation | Strict tenant isolation ensuring User A can never query or modify User B's portfolio or orders. | **STATUS: IMPLEMENTED** |
+| **FR-14** | Personal Watchlist | Add/remove instruments from personal watchlists with live price monitoring. | **STATUS: IMPLEMENTED** |
+| **FR-15** | Paper Trading Desk | Simulated ₹10,00,000 capital account, BUY/SELL order ticket, cash ledger, holding updates. | **STATUS: IMPLEMENTED** |
+| **FR-16** | Local Ollama AI | Local LLM service with conversational memory, portfolio context injection, and offline fallback. | **STATUS: IMPLEMENTED** |
+| **FR-17** | Market Data Service | Abstracted provider layer (`demo` vs `real`) configurable server-side via environment variables. | **STATUS: IMPLEMENTED** |
+| **FR-18** | Security Hardening | Rate limiting, CORS origin restrictions, security headers, file upload guards, audit logs. | **STATUS: IMPLEMENTED** |
 
 ---
 
@@ -83,10 +92,16 @@ Retail investors face two structural hurdles:
 
 ### Backend Architecture
 - **Runtime & Framework:** Python 3.10+ (tested through 3.14), FastAPI 0.141
-- **Server:** Uvicorn ASGI
-- **Data Validation:** Pydantic v2
-- **Database:** SQLite3 embedded relational engine (`backend/zerolatency.db`)
-- **Multipart Ingestion:** `python-multipart` (CSV statement processing)
+- **Server:** Uvicorn ASGI (Development) / Gunicorn + Uvicorn Workers (Production)
+- **Data Validation & Schemas:** Pydantic v2
+- **ORM & Migrations:** SQLAlchemy 2.0+ ORM with Alembic schema migration framework
+- **Databases:** SQLite3 (local embedded development) & PostgreSQL (production, via `DATABASE_URL`)
+- **Password Security:** Argon2id hashing algorithm via `argon2-cffi` (with bcrypt fallback)
+- **Session Security:** Cryptographic JSON Web Tokens (PyJWT) with access token expiration and refresh token rotation
+- **Local AI Engine:** Local Ollama HTTP API client (`httpx`) connecting to self-hosted models (e.g., `llama3.1:8b`, `mistral`, `gemma2`) with bounded chat memory and deterministic rule-based knowledge fallback
+- **Multipart Ingestion:** `python-multipart` with 5MB payload ceiling and 1,000-row statement safety limits
+- **Rate Limiting:** Sliding-window in-memory rate limiter per IP/client for auth, paper trade, and AI endpoints
+- **Security Middleware:** Custom security headers (CSP, HSTS, X-Content-Type-Options, Frame protection) and strict CORS origins
 
 ---
 
@@ -94,140 +109,138 @@ Retail investors face two structural hurdles:
 
 ```
                     ┌───────────────────────────────────────────┐
-                    │          RETAIL INVESTOR / JUDGE          │
+                    │          RETAIL INVESTOR / VISITOR        │
                     └─────────────────────┬─────────────────────┘
                                           │
+                        Public Routes     │  Protected Actions (Auth Token)
+                        (/, /markets)     │  (/dashboard, /watchlist, /paper)
                                           ▼
                     ┌───────────────────────────────────────────┐
                     │         REACT 19 FRONTEND TERMINAL        │
-                    │   (Vite, Three.js 3D, Tailwind CSS v4)    │
+                    │   (Vite, Three.js 3D, Context API, CSS)   │
                     └─────────────────────┬─────────────────────┘
-                                          │ HTTP / JSON API
+                                          │ HTTP / JSON REST API
                                           ▼
                     ┌───────────────────────────────────────────┐
                     │             FASTAPI REST GATEWAY          │
-                    │          (CORS, Pydantic Validation)      │
+                    │   (Security Headers, Rate Limiter, CORS)  │
                     └──────┬──────────────┬──────────────┬──────┘
                            │              │              │
             ┌──────────────▼─┐     ┌──────▼──────┐   ┌───▼───────────┐
-            │ Authentication │     │ Aggregation │   │  Analytics &  │
-            │  & Session     │     │ & Ingestion │   │  Diagnostics  │
+            │ Authentication │     │ Market Data │   │   Local AI    │
+            │  (Argon2id,    │     │   Service   │   │  (Ollama API  │
+            │   JWT, Tokens) │     │ (Demo/Real) │   │   + Fallback) │
+            └──────────────┬─┘     └──────┬──────┘   └───┬───────────┘
+                           │              │              │
+            ┌──────────────▼─┐     ┌──────▼──────┐   ┌───▼───────────┐
+            │ Paper Trading  │     │ Watchlists  │   │  Portfolio &  │
+            │  (Simulated    │     │  & Alerts   │   │ Ingestion CSV │
+            │   Order Desk)  │     │             │   │  Engine       │
             └──────────────┬─┘     └──────┬──────┘   └───┬───────────┘
                            │              │              │
                            └──────────────┼──────────────┘
-                                          ▼
-                    ┌───────────────────────────────────────────┐
-                    │      DATA NORMALIZATION & TAXONOMY        │
-                    │   (EQUITY, BOND, REIT, INVIT Pillars)     │
-                    └─────────────────────┬─────────────────────┘
                                           │
                                           ▼
                     ┌───────────────────────────────────────────┐
-                    │           ZERO LATENCY COPILOT            │
-                    │     (Deterministic Awareness Engine)      │
+                    │          SQLALCHEMY ORM & ALEMBIC         │
                     └─────────────────────┬─────────────────────┘
                                           │
-                                          ▼
-                    ┌───────────────────────────────────────────┐
-                    │          SQLITE PERSISTENCE LAYER         │
-                    │     (Users, Assets, Holdings, Goals)      │
-                    └───────────────────────────────────────────┘
+                         ┌────────────────┴────────────────┐
+                         ▼                                 ▼
+           ┌───────────────────────────┐     ┌───────────────────────────┐
+           │      SQLITE DATABASE      │     │    POSTGRESQL DATABASE    │
+           │    (Local Development)    │     │   (Production Deployment) │
+           └───────────────────────────┘     └───────────────────────────┘
 ```
 
 ---
 
 ## 9. Frontend Architecture
 The frontend is structured as a single-page terminal utilizing React Context for global state management:
-- **`AppContext.tsx`:** Manages active view (`landing`, `dashboard`, `portfolio`, `explorer`, `insights`, `goals`, `learning`, `import`, `security`, `architecture`, `settings`, `login`, `register`), holdings cache, toast feedback, and light/dark theme synchronization.
+- **`AppContext.tsx`:** Manages active view (`landing`, `markets`, `dashboard`, `portfolio`, `watchlist`, `explorer`, `insights`, `goals`, `learning`, `import`, `security`, `architecture`, `settings`, `login`, `signup`), session tokens, current user, paper accounts, watchlist cache, gatekeeper prompt modal, toast feedback, and light/dark theme synchronization.
+- **Gatekeeper Auth Modal (`AuthPromptModal.tsx`):** Non-blocking modal intercepting protected actions ("Add to Watchlist", "Paper Trade", "Open Wealth OS", "Copilot") for unauthenticated visitors.
 - **View Isolation:** Each major view is encapsulated within `frontend/src/views/` without circular dependencies.
-- **Component Reusability:** Modular atomic components (`Navbar`, `Logo`, `FinancialNetwork3D`, `AssetDetailModal`, `CopilotDrawer`, `ToastContainer`).
+- **Component Reusability:** Modular atomic components (`Navbar`, `Logo`, `FinancialNetwork3D`, `AssetDetailModal`, `PaperTradeModal`, `CopilotDrawer`, `ToastContainer`).
 
 ---
 
 ## 10. Backend Architecture
-The backend is organized as a modular FastAPI service layer:
-- **`main.py`:** Application bootstrapping, CORS middleware, lifespan database seeding, and REST endpoint definitions.
+The backend is organized as a modular, production-ready FastAPI service layer:
+- **`main.py`:** Application bootstrapping, rate limiting, security headers, CORS middleware, standardized error responses, health checks (`/api/health`, `/api/ai/health`), and 37 REST API endpoints.
+- **`db_models.py`:** 12 declarative SQLAlchemy ORM models mapped to relational database tables.
 - **`models.py`:** Strict Pydantic v2 schemas validating request payloads and formatting API responses.
-- **`database.py`:** Connection management, schema migration scripts, and benchmark data seeding.
+- **`database.py`:** Dual-engine connection management (SQLite / PostgreSQL), auto-migrations for development, and benchmark data seeding.
+- **`security.py`:** Sliding-window rate limiter, security headers middleware, and authenticated user dependency with tenant isolation.
 - **`services/`:**
+  - `auth_service.py`: Real registration, login, Argon2id hashing, token refresh, password reset, email verification, and 1-click demo access.
+  - `market_data_service.py`: `MarketDataProvider` abstraction interface supporting `DemoMarketDataProvider` and `RealMarketDataProvider`.
+  - `paper_trading_service.py`: Virtual account management (₹10,00,000 balance), BUY/SELL order ticket execution, cash ledger, and holding sync.
+  - `watchlist_service.py`: Tenant-isolated watchlist CRUD operations.
+  - `local_ai_service.py`: Self-hosted Ollama LLM assistant with bounded memory, portfolio context injection, and deterministic knowledge fallback.
+  - `email_service.py`: SMTP notification service with development console outbox fallback.
   - `portfolio_service.py`: Valuation math, allocation weightings, and benchmark resets.
   - `analytics_service.py`: Risk profiling, concentration detection, and cash flow projections.
-  - `copilot_service.py`: Natural language query processing, holding synthesis, and advice policy enforcement.
-  - `import_service.py`: Automated multi-broker sync simulation and CSV file parsing.
+  - `import_service.py`: 5MB validated CSV statement processing and multi-broker synchronization pipes.
   - `goals_service.py`: CRUD operations for financial goal tracking.
-  - `auth_service.py`: 1-click demo login and session token distribution.
 
 ---
 
 ## 11. Database Architecture
-The SQLite database (`backend/zerolatency.db`) enforces relational foreign-key integrity across 6 tables:
+The production schema enforces relational foreign-key integrity and multi-tenant data isolation across 12 tables:
 
 ### 1. `users`
-- `id` (TEXT, PK): Unique user identifier (e.g., `demo-user-001`).
-- `email` (TEXT, UNIQUE): Account email address.
-- `name` (TEXT): Display name.
-- `password_hash` (TEXT): Cryptographic hash or demo placeholder.
-- `is_demo` (INTEGER): Flag designating benchmark demo accounts (1) vs registered (0).
+- `id` (VARCHAR(64), PK): Unique user UUID / identifier.
+- `email` (VARCHAR(255), UNIQUE, INDEX): Account email address.
+- `name` (VARCHAR(255)): Display name.
+- `password_hash` (VARCHAR(255)): Argon2id cryptographic password hash.
+- `is_demo` (BOOLEAN): Flag designating canonical demo accounts (1) vs registered accounts (0).
+- `email_verified` (BOOLEAN): Email verification status flag.
 - `created_at` (TIMESTAMP).
 
-### 2. `assets`
-- `id` (TEXT, PK): Asset identifier (e.g., `EQ_01`, `REIT_01`, `BOND_01`, `INVIT_01`).
-- `symbol` (TEXT, UNIQUE): Exchange ticker (e.g., `NIFTYBEES`, `EMBASSY`, `PGINVIT`).
-- `name` (TEXT): Official instrument name.
-- `asset_type` (TEXT): Pillar taxonomy (`EQUITY`, `BOND`, `REIT`, `INVIT`, `OTHER`).
-- `category` (TEXT): Regulatory sub-category.
-- `sector` (TEXT): Industry sector.
-- `description` (TEXT): Detailed instrument background and return mechanism.
-- `risk_level` (TEXT): `Low`, `Moderate`, `Moderate-High`, `High`.
-- `annual_yield` (REAL): Indicated annual cash distribution yield (%).
-- `liquidity_score` (TEXT): `High`, `Moderate`, `Low`.
-- `price` (REAL): Current mark-to-market unit price (₹).
-- `change_24h` (REAL): 24-hour percentage price change (%).
+### 2. `refresh_tokens`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `token` (VARCHAR(512), UNIQUE, INDEX), `expires_at` (TIMESTAMP), `created_at` (TIMESTAMP).
 
-### 3. `holdings`
-- `id` (TEXT, PK): Holding record identifier.
-- `user_id` (TEXT, FK -> users.id).
-- `asset_id` (TEXT, FK -> assets.id).
-- `source` (TEXT): Custody source (`Broker A`, `Broker B`, `Depository`, `Imported CSV`).
-- `units` (REAL): Quantity of units held.
-- `avg_buy_price` (REAL): Average acquisition cost per unit (₹).
-- `current_price` (REAL): Live market valuation per unit (₹).
-- `updated_at` (TIMESTAMP).
+### 3. `password_reset_tokens`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `token` (VARCHAR(255), UNIQUE, INDEX), `expires_at` (TIMESTAMP), `used` (BOOLEAN).
 
-### 4. `transactions`
-- `id` (TEXT, PK).
-- `user_id` (TEXT, FK -> users.id).
-- `asset_id` (TEXT, FK -> assets.id).
-- `type` (TEXT): `BUY`, `DIVIDEND`, `INTEREST`, `DISTRIBUTION`.
-- `units` (REAL).
-- `price` (REAL).
-- `amount` (REAL).
-- `date` (TEXT).
-- `source` (TEXT).
+### 4. `email_verification_tokens`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `token` (VARCHAR(255), UNIQUE, INDEX), `expires_at` (TIMESTAMP).
 
-### 5. `goals`
-- `id` (TEXT, PK): Unique goal identifier.
-- `user_id` (TEXT, FK -> users.id).
-- `title` (TEXT): Goal objective (e.g., "Emergency Fund", "Home Downpayment").
-- `category` (TEXT): `Emergency`, `Travel`, `Education`, `Home`, `Retirement`.
-- `target_amount` (REAL): Total capital target (₹).
-- `current_amount` (REAL): Accumulated balance (₹).
-- `time_period` (TEXT): Horizon duration (e.g., "12 Months", "24 Months").
-- `icon` (TEXT): Icon identifier.
-- `created_at` (TIMESTAMP).
+### 5. `assets`
+- `id` (VARCHAR(64), PK): Asset identifier (e.g., `EQ_01`, `REIT_01`, `BOND_01`, `INVIT_01`).
+- `symbol` (VARCHAR(32), UNIQUE, INDEX): Exchange ticker (e.g., `NIFTYBEES`, `EMBASSY`, `PGINVIT`).
+- `name`, `asset_type`, `category`, `sector`, `description`, `risk_level`, `annual_yield`, `liquidity_score`, `price`, `change_24h`.
 
-### 6. `portfolio_snapshots`
-- `id` (TEXT, PK).
-- `user_id` (TEXT, FK -> users.id).
-- `date` (TEXT): Historical timestamp (YYYY-MM).
-- `total_value` (REAL), `invested_value` (REAL), `equity_val` (REAL), `bond_val` (REAL), `reit_val` (REAL), `invit_val` (REAL), `other_val` (REAL).
+### 6. `holdings`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `asset_id` (FK -> assets.id), `source`, `units`, `avg_buy_price`, `current_price`, `updated_at`.
+
+### 7. `transactions`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `asset_id` (FK -> assets.id), `type` (`BUY`, `SELL`, `DIVIDEND`, `INTEREST`), `units`, `price`, `amount`, `date`, `source`.
+
+### 8. `goals`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `title`, `category`, `target_amount`, `current_amount`, `time_period`, `icon`, `created_at`.
+
+### 9. `portfolio_snapshots`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `date`, `total_value`, `invested_value`, `equity_val`, `bond_val`, `reit_val`, `invit_val`, `other_val`.
+
+### 10. `watchlists`
+- `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `asset_id` (FK -> assets.id), `notes`, `created_at`.
+
+### 11. `paper_accounts` & `paper_orders`
+- **`paper_accounts`:** `id` (VARCHAR(64), PK), `user_id` (FK -> users.id, UNIQUE), `cash_balance` (REAL, default ₹10,00,000), `initial_balance` (REAL), `created_at`, `updated_at`.
+- **`paper_orders`:** `id` (VARCHAR(64), PK), `user_id` (FK -> users.id), `symbol`, `side` (`BUY`/`SELL`), `quantity`, `price`, `total_amount`, `status` (`FILLED`), `created_at`.
+
+### 12. `audit_logs`
+- `id` (VARCHAR(64), PK), `user_id`, `action`, `resource`, `details`, `ip_address`, `timestamp`.
 
 ---
 
 ## 12. Authentication Architecture
-- **Demo Mode:** Instantaneous 1-click access via `POST /api/auth/demo` returning a pre-authenticated session token and loading `demo-user-001`.
-- **Credential Auth:** `POST /api/auth/login` and `POST /api/auth/register` validating email/password combinations.
-- **Session Header:** API requests pass `Authorization: Bearer <token>` (defaulting to the demo user context if omitted during evaluation).
+- **Production Credential Auth:** `POST /api/auth/register` creates user accounts with Argon2id password hashing and optional email verification token generation. `POST /api/auth/login` verifies credentials and issues a cryptographic JWT access token + refresh token pair.
+- **Refresh Token Rotation:** `POST /api/auth/refresh` allows transparent frontend token rejuvenation without forcing re-login.
+- **Password Recovery:** `POST /api/auth/forgot-password` dispatches a secure reset link (or development outbox notification) followed by `POST /api/auth/reset-password`.
+- **Demo Mode Preservation:** Instantaneous 1-click access via `POST /api/auth/demo` returning a pre-authenticated session token and loading `demo-user-001` with the canonical ₹8,42,500 benchmark.
+- **Tenant Isolation:** All protected endpoints resolve the calling user via JWT Bearer tokens; frontends cannot spoof or query other users' portfolios.
 - **STATUS: IMPLEMENTED**
 
 ---
@@ -251,16 +264,16 @@ Incoming assets are normalized into 4 primary statutory pillars:
 ---
 
 ## 15. Portfolio Calculations & Valuation Formulas
-1. **Invested Basis:**  
+1. **Invested Basis:**
    $$\text{Invested Value} = \sum (\text{units}_i \times \text{avg\_buy\_price}_i)$$
-2. **Current Valuation:**  
+2. **Current Valuation:**
    $$\text{Total Value} = \sum (\text{units}_i \times \text{current\_price}_i)$$
-3. **Unrealized Gain/Loss:**  
-   $$\text{Unrealized P/L} = \text{Total Value} - \text{Total Invested}$$  
+3. **Unrealized Gain/Loss:**
+   $$\text{Unrealized P/L} = \text{Total Value} - \text{Total Invested}$$
    $$\text{Unrealized P/L \%} = \left(\frac{\text{Unrealized P/L}}{\text{Total Invested}}\right) \times 100$$
-4. **Projected Annual Income:**  
+4. **Projected Annual Income:**
    $$\text{Annual Income} = \sum \left(\text{Current Value}_i \times \frac{\text{annual\_yield}_i}{100}\right)$$
-5. **Weighted Portfolio Yield:**  
+5. **Weighted Portfolio Yield:**
    $$\text{Weighted Yield \%} = \left(\frac{\text{Projected Annual Income}}{\text{Total Value}}\right) \times 100$$
 - **STATUS: IMPLEMENTED**
 
@@ -373,13 +386,23 @@ Computes algorithmic diagnostics delivered via `GET /api/insights`:
 
 ## 27. Environment Variables
 Described in `.env.example`:
-- `ENVIRONMENT`: `development` | `production`
-- `PORT`: `8000`
-- `HOST`: `127.0.0.1`
-- `VITE_API_URL`: `http://127.0.0.1:8000`
-- `DATABASE_URL`: `sqlite:///./backend/zerolatency.db`
-- `JWT_SECRET`: Secret token signing key
-- `LLM_PROVIDER`: `none` (default deterministic) | `openai` | `gemini`
+- `APP_ENV`: `development` | `production`
+- `APP_URL`: `http://localhost:8000`
+- `FRONTEND_URL`: `http://localhost:5173`
+- `DATABASE_URL`: `sqlite:///./backend/zerolatency.db` (or `postgresql://postgres:postgres@localhost:5432/zerolatency`)
+- `JWT_SECRET`: Secret signing key (replace with random 64-char key in production)
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: `60`
+- `REFRESH_TOKEN_EXPIRE_DAYS`: `7`
+- `OLLAMA_BASE_URL`: `http://localhost:11434`
+- `OLLAMA_MODEL`: `llama3.1:8b` (or `mistral`, `gemma2`)
+- `SMTP_HOST`: SMTP server host
+- `SMTP_PORT`: `587`
+- `SMTP_USERNAME` / `SMTP_PASSWORD`: SMTP credentials
+- `SMTP_FROM`: Sender address
+- `MARKET_DATA_PROVIDER`: `demo` | `real`
+- `MARKET_DATA_API_KEY`: Server-side provider key (optional)
+- `PAPER_TRADING_ENABLED`: `true`
+- `REQUIRE_EMAIL_VERIFICATION`: `false` (demo) | `true` (prod)
 
 ---
 
