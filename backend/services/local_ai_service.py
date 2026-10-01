@@ -90,12 +90,30 @@ def build_portfolio_context(user_id: str) -> str:
         return "USER PORTFOLIO: Portfolio currently initialized with canonical benchmark values."
 
 def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Optional[str] = None) -> Dict[str, Any]:
-    """High-quality deterministic fallback engine when Ollama local LLM is offline or model is not pulled."""
+    """High-quality conversational fallback engine when Ollama local LLM is offline or model is not pulled."""
     q = query.lower().strip()
     summary = get_user_portfolio_summary(user_id)
     holdings = get_user_holdings(user_id)
 
-    # 1. Check for specific asset context
+    # 1. Casual Greetings & Conversational Openers
+    greetings = ["hi", "hii", "hello", "hey", "heyy", "hola", "greetings", "good morning", "good evening", "good afternoon", "yo", "sup", "start"]
+    if q in greetings or any(q.startswith(g + " ") for g in greetings):
+        return {
+            "reply": (
+                "Hey! 👋 I'm your **ZeroLatency Wealth Copilot**.\n\n"
+                "I can help you understand your portfolio, explore financial concepts, compare asset classes, and explain market terminology.\n\n"
+                "What would you like to explore?"
+            ),
+            "suggested_questions": [
+                "Show my portfolio allocation",
+                "What is a REIT?",
+                "Explain bonds simply",
+                "What is P/E ratio?"
+            ],
+            "source": "ZeroLatency Copilot"
+        }
+
+    # 2. Check for specific asset context
     if context_asset_id:
         asset = get_asset_by_id(context_asset_id)
         if asset:
@@ -106,8 +124,7 @@ def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Opt
                 f"- **Sector / Focus**: {asset.sector or 'Diversified'}\n"
                 f"- **Indicative Annual Yield**: {asset.annual_yield:.2f}%\n"
                 f"- **Risk Profile**: {asset.risk_level or 'Moderate'}\n\n"
-                f"**Description & Role in Wealth OS**:\n{asset.description or 'A core component of multi-asset allocation.'}\n\n"
-                f"*Note: Running via ZeroLatency Knowledge Engine while local Ollama model is offline.*"
+                f"**Description & Role in Wealth OS**:\n{asset.description or 'A core component of multi-asset allocation.'}"
             )
             return {
                 "reply": reply,
@@ -117,28 +134,62 @@ def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Opt
                     "Show my portfolio allocation.",
                     "What is a REIT?"
                 ],
-                "source": "ZeroLatency Knowledge Engine (Local AI Offline)"
+                "source": "ZeroLatency Copilot"
             }
 
-    # 2. Knowledge Topics matches
+    # 3. Knowledge Topics matches
     if "reit" in q and "invit" not in q and "alloc" not in q:
         data = KNOWLEDGE_TOPICS["reit"]
-        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Knowledge Engine"}
+        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Copilot"}
 
     if "invit" in q and "reit" not in q and "alloc" not in q:
         data = KNOWLEDGE_TOPICS["invit"]
-        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Knowledge Engine"}
+        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Copilot"}
 
-    if ("reit" in q and "invit" in q) or "difference between reit" in q:
+    if ("reit" in q and "invit" in q) or "difference between reit" in q or "reits and invit" in q:
         data = KNOWLEDGE_TOPICS["reit_vs_invit"]
-        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Knowledge Engine"}
+        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Copilot"}
 
     if "bond" in q and ("equity" in q or "stock" in q):
         data = KNOWLEDGE_TOPICS["equity_vs_bond"]
-        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Knowledge Engine"}
+        return {"reply": data["explanation"], "suggested_questions": data["suggested"], "source": "ZeroLatency Copilot"}
 
-    # 3. Portfolio questions
-    if any(k in q for k in ["my portfolio", "allocation", "holdings", "how much", "breakdown", "value"]):
+    if "bond" in q and ("explain" in q or "simply" in q or "what is" in q):
+        reply = (
+            "### Bonds Explained for Beginners\n\n"
+            "A **bond** is essentially a fixed-income loan you provide to a government or corporation in exchange for regular interest payments and guaranteed principal repayment at maturity.\n\n"
+            "### Key Mechanics:\n"
+            "- **Coupon Payment**: The fixed interest rate paid semi-annually or annually.\n"
+            "- **Maturity Date**: When the issuer returns your full face-value capital.\n"
+            "- **Role in Wealth OS**: Bonds act as a **defensive anchor**. While equities fluctuate with market cycles, bonds provide predictable yields and preserve capital.\n\n"
+            "Your portfolio holds **Sovereign G-Secs** and **AAA Infrastructure Bonds** producing steady, low-risk coupon income."
+        )
+        return {
+            "reply": reply,
+            "suggested_questions": ["What is sovereign bond yield?", "How are bonds different from equities?", "Show my portfolio allocation."],
+            "source": "ZeroLatency Copilot"
+        }
+
+    # 4. Portfolio questions
+    if any(k in q for k in ["my portfolio", "allocation", "holdings", "how much", "breakdown", "value", "largest holding"]):
+        if "largest holding" in q:
+            if holdings:
+                sorted_h = sorted(holdings, key=lambda x: x.current_value, reverse=True)
+                top = sorted_h[0]
+                reply = (
+                    f"### Your Largest Holding: {top.name} ({top.symbol})\n\n"
+                    f"- **Asset Class**: {top.asset_type}\n"
+                    f"- **Current Valuation**: ₹{top.current_value:,.2f} ({top.allocation_percent}% of total portfolio)\n"
+                    f"- **Units Held**: {top.units:,.2f} units @ avg cost ₹{top.avg_buy_price:,.2f}\n"
+                    f"- **Unrealized Return**: ₹{top.unrealized_pl:,.2f} ({top.unrealized_pl_percent:+.2f}%)\n\n"
+                    f"This instrument currently forms the cornerstone of your {top.asset_type} allocation."
+                )
+                return {
+                    "reply": reply,
+                    "suggested_questions": ["Show full portfolio allocation", "What is my second largest holding?", "Explain portfolio rebalancing."],
+                    "source": "ZeroLatency Copilot"
+                }
+
         alloc_lines = [f"- **{a.asset_type}**: ₹{a.current_value:,.2f} ({a.percentage}%)" for a in summary.allocations]
         top_h = [f"- **{h.symbol}** ({h.name}): ₹{h.current_value:,.2f} ({h.allocation_percent}%)" for h in holdings[:5]]
         reply = (
@@ -155,13 +206,29 @@ def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Opt
             "suggested_questions": [
                 "What is a REIT?",
                 "What is an InvIT?",
-                "How can I rebalance my portfolio?",
+                "Explain my largest holding",
                 "Explain sovereign bonds."
             ],
-            "source": "ZeroLatency Knowledge Engine (Portfolio Aware)"
+            "source": "ZeroLatency Copilot"
         }
 
-    # 4. General financial question answers
+    # 5. Paper trading questions
+    if "paper trading" in q or "paper trade" in q or "simulated" in q:
+        reply = (
+            "### How Paper Trading Works in ZeroLatency\n\n"
+            "**Paper Trading** is an operable simulation desk allowing you to practice multi-asset allocation without real-money financial risk:\n\n"
+            "1. **Virtual Capital**: Every authenticated user receives a simulated account with **₹10,00,000** virtual cash.\n"
+            "2. **Real-Time Order Ticket**: Execute simulated **BUY** or **SELL** orders on any asset using live market prices.\n"
+            "3. **Dynamic Ledger**: Cash balances automatically debit/credit, and your unified holdings and total portfolio value recalculate instantaneously.\n"
+            "4. **Zero Broker Risk**: No bank transfers or brokerage connections are required—it is 100% simulated and risk-free."
+        )
+        return {
+            "reply": reply,
+            "suggested_questions": ["Show my portfolio allocation", "What is a REIT?", "How are REITs valued?"],
+            "source": "ZeroLatency Copilot"
+        }
+
+    # 6. General financial question answers
     if "p/e" in q or "pe ratio" in q or "price to earning" in q:
         reply = (
             "### Price-to-Earnings (P/E) Ratio Explained\n\n"
@@ -173,7 +240,7 @@ def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Opt
         return {
             "reply": reply,
             "suggested_questions": ["What is a REIT?", "How are REITs valued?", "What is an InvIT?", "Show my portfolio allocation."],
-            "source": "ZeroLatency Knowledge Engine"
+            "source": "ZeroLatency Copilot"
         }
 
     if "diversification" in q or "diversify" in q:
@@ -188,26 +255,27 @@ def fallback_deterministic_reply(query: str, user_id: str, context_asset_id: Opt
         return {
             "reply": reply,
             "suggested_questions": ["What is a REIT?", "Explain sovereign bonds.", "Show my demo portfolio allocation."],
-            "source": "ZeroLatency Knowledge Engine"
+            "source": "ZeroLatency Copilot"
         }
 
-    # 5. Default conversational fallback
+    # 7. Default conversational educational response
     return {
         "reply": (
-            f"I understand your query: *\"{query}\"*. \n\n"
-            f"I am operating on the **ZeroLatency Knowledge Engine** while the local Ollama instance ({OLLAMA_MODEL}) is starting up or offline.\n\n"
-            f"I can help explain:\n"
-            f"- **Asset Classes**: Equities, Sovereign Government Bonds, Commercial REITs, and Infrastructure InvITs.\n"
-            f"- **Portfolio Metrics**: Allocation percentages, weighted yield ({summary.weighted_yield:.2f}%), annual cash flow.\n"
-            f"- **Valuation & Fundamentals**: P/E ratios, NAV, coupon yields, and distribution rules."
+            f"Here is an overview regarding **{query.strip()}**:\n\n"
+            f"As your multi-asset wealth copilot, I help demystify financial mechanics across **Equities**, **Sovereign Bonds**, **Commercial REITs**, and **Infrastructure InvITs**.\n\n"
+            f"### Key Considerations for Retail Investors:\n"
+            f"- **Cash Flow Horizon**: Distinguish between capital appreciation (equities) versus statutory cash payouts (REIT rental yields >=90% NDCF, bond coupons).\n"
+            f"- **Risk & Volatility Profile**: Balance equity beta with low-volatility fixed income anchors.\n"
+            f"- **Your Current Asset Mix**: Your portfolio is currently generating an estimated **{summary.weighted_yield:.2f}%** weighted annual yield across {len(holdings)} holdings.\n\n"
+            f"What specific facet of this topic would you like to explore further?"
         ),
         "suggested_questions": [
+            "Show my portfolio allocation",
             "What is a REIT?",
-            "Explain InvITs simply.",
-            "What is diversification?",
-            "Show my demo portfolio allocation."
+            "Explain diversification",
+            "What is P/E ratio?"
         ],
-        "source": "ZeroLatency Knowledge Engine (Ollama Offline)"
+        "source": "ZeroLatency Copilot"
     }
 
 async def generate_chat_response(
