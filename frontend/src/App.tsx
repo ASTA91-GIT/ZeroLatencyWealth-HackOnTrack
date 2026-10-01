@@ -19,7 +19,7 @@ import { ArchitectureView } from './views/ArchitectureView';
 import { SettingsView } from './views/SettingsView';
 import { AuthView } from './views/AuthView';
 
-import { Sparkles, Layers } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export const MainApp: React.FC = () => {
   const { currentView, selectedAsset, setSelectedAsset, setIsCopilotDrawerOpen } = useApp();
@@ -58,7 +58,7 @@ export const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[var(--bg)] text-theme flex flex-col font-sans selection:bg-purple-500 selection:text-white transition-colors duration-200">
       {/* Top Navigation */}
       <Navbar />
 
@@ -71,12 +71,12 @@ export const MainApp: React.FC = () => {
       {currentView !== 'landing' && (
         <button
           onClick={() => setIsCopilotDrawerOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500 text-black font-extrabold text-xs shadow-[0_0_25px_rgba(0,242,254,0.4)] hover:shadow-[0_0_35px_rgba(0,242,254,0.6)] transform hover:-translate-y-1 transition-all cursor-pointer"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-500 text-white font-extrabold text-xs shadow-[0_0_25px_rgba(168,85,247,0.4)] hover:shadow-[0_0_35px_rgba(168,85,247,0.6)] transform hover:-translate-y-1 transition-all cursor-pointer"
           title="Open ZeroLatency Copilot"
         >
-          <Sparkles className="w-4 h-4 fill-black" />
+          <Sparkles className="w-4 h-4 fill-white" />
           <span className="hidden sm:inline">ZeroLatency Copilot</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-black/20 text-[10px] uppercase font-mono">
+          <span className="px-1.5 py-0.5 rounded-full bg-white/20 text-[10px] uppercase font-mono">
             AI
           </span>
         </button>

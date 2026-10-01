@@ -2,19 +2,16 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   Compass,
-  Building,
-  TrendingUp,
-  Shield,
-  Coins,
   Sparkles,
-  ArrowRight,
   Layers,
   CheckCircle2,
   AlertTriangle,
   Clock,
   Briefcase,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Workflow,
+  Coins
 } from 'lucide-react';
 
 interface AssetCategoryDetail {
@@ -51,7 +48,7 @@ const CATEGORIES: AssetCategoryDetail[] = [
     name: 'Real Estate Investment Trusts (REITs)',
     badge: 'COMMERCIAL REAL ESTATE',
     tagline: 'Own fractional shares of Grade-A tech parks and institutional office towers.',
-    accentColor: 'border-purple-500/40 bg-purple-500/10 text-purple-400',
+    accentColor: 'border-purple-500/40 bg-purple-500/10 text-purple-600 dark:text-purple-300',
     whatIsIt: 'A REIT is an investment vehicle that pools capital from retail investors to own, operate, and finance prime commercial properties (like IT parks leased to Microsoft, Google, IBM).',
     howItWorks: [
       'The Trust acquires prime commercial real estate with long-term tenant agreements (typically 5 to 15-year leases).',
@@ -93,7 +90,7 @@ const CATEGORIES: AssetCategoryDetail[] = [
     name: 'Infrastructure Investment Trusts (InvITs)',
     badge: 'ESSENTIAL INFRASTRUCTURE',
     tagline: 'Participate in critical national utilities, power transmission, and toll highways.',
-    accentColor: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
+    accentColor: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300',
     whatIsIt: 'An InvIT is an investment vehicle that pools capital to invest directly in revenue-generating physical infrastructure assets like interstate electric grids and national toll highways.',
     howItWorks: [
       'The Trust owns completed, operational infrastructure assets with long-term concession agreements.',
@@ -135,7 +132,7 @@ const CATEGORIES: AssetCategoryDetail[] = [
     name: 'Bonds & Fixed Income Securities',
     badge: 'CAPITAL PRESERVATION',
     tagline: 'Lend directly to Sovereign Governments or AAA corporations for contractual interest.',
-    accentColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
+    accentColor: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
     whatIsIt: 'A bond is a debt instrument where you lend capital to a borrower (Government of India, public corporations) in exchange for fixed periodic interest (coupon) and return of face value at maturity.',
     howItWorks: [
       'The investor purchases a bond with a defined face value, coupon interest rate, and maturity year.',
@@ -177,7 +174,7 @@ const CATEGORIES: AssetCategoryDetail[] = [
     name: 'Equities & Equity ETFs',
     badge: 'GROWTH & COMPOUNDING',
     tagline: 'Own fractional equity in leading enterprises driving economic expansion.',
-    accentColor: 'border-blue-500/40 bg-blue-500/10 text-blue-400',
+    accentColor: 'border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-300',
     whatIsIt: 'An equity share represents fractional ownership of a company. You participate in the profits, corporate growth, and long-term enterprise valuation.',
     howItWorks: [
       'Investors buy shares on public bourses (NSE/BSE) or index ETFs (like Nifty 50 BeES).',
@@ -225,15 +222,15 @@ export const AssetExplorerView: React.FC = () => {
   return (
     <div className="space-y-6 pb-16">
       {/* Header */}
-      <div className="p-6 rounded-2xl bg-[#0c101d] border border-white/[0.08] shadow-xl">
+      <div className="fintech-card p-6">
         <div className="flex items-center gap-2">
-          <Compass className="w-5 h-5 text-cyan-400" />
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+          <Compass className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          <h1 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
             Asset Explorer & Awareness Center
           </h1>
         </div>
-        <p className="text-xs text-slate-400 mt-1 max-w-3xl">
-          Learn how equities, bonds, REITs, and InvITs operate, generate income, and interact within a balanced portfolio. Clear explanations without jargon.
+        <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 max-w-3xl leading-relaxed">
+          Demystifying equities, sovereign bonds, commercial REITs, and infrastructure InvITs. Understand how cash flows, distribution mandates, and risk profiles operate together in a balanced portfolio.
         </p>
       </div>
 
@@ -247,50 +244,50 @@ export const AssetExplorerView: React.FC = () => {
               onClick={() => setActiveCategory(cat.id)}
               className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-cyan-500/10 border-cyan-400/50 shadow-[0_0_20px_rgba(0,242,254,0.15)]'
-                  : 'bg-[#0c101d] border-white/[0.08] hover:border-white/20'
+                  ? 'bg-purple-600/10 dark:bg-purple-500/15 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.15)]'
+                  : 'fintech-card hover:border-purple-300 dark:hover:border-white/20'
               }`}
             >
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase border ${cat.accentColor}`}>
                 {cat.badge}
               </span>
-              <h3 className="text-sm font-bold text-white mt-2">{cat.id}s</h3>
-              <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">{cat.tagline}</p>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white mt-2">{cat.id}s</h3>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1">{cat.tagline}</p>
             </button>
           );
         })}
       </div>
 
       {/* Selected Category Deep Dive Card */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-[#0c101d] border border-white/[0.08] space-y-8 shadow-2xl">
+      <div className="fintech-card p-6 sm:p-8 space-y-8">
         {/* Title and Tagline */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200 dark:border-white/10">
           <div>
             <div className="flex items-center gap-2">
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase border ${selected.accentColor}`}>
                 {selected.badge}
               </span>
-              <span className="text-xs font-mono text-cyan-400 font-bold">EDUCATIONAL MODULE</span>
+              <span className="text-xs font-mono text-purple-600 dark:text-purple-400 font-bold">EDUCATIONAL MODULE</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white mt-2 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white mt-2 tracking-tight">
               {selected.name}
             </h2>
-            <p className="text-sm text-slate-300 mt-1 font-medium">{selected.tagline}</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-300 mt-1 font-medium">{selected.tagline}</p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentView('portfolio')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-300 bg-white/[0.04] border border-white/10 hover:border-cyan-400 hover:text-white transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/10 hover:border-purple-400 dark:hover:border-purple-500/40 hover:text-purple-600 dark:hover:text-white transition-all cursor-pointer"
             >
               <Layers className="w-3.5 h-3.5" />
               <span>Inspect Holdings</span>
             </button>
             <button
               onClick={() => setIsCopilotDrawerOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-black bg-gradient-to-r from-cyan-400 to-sky-300 hover:from-cyan-300 shadow-[0_0_15px_rgba(0,242,254,0.3)] transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(139,92,246,0.35)] transition-all cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 fill-black" />
+              <Sparkles className="w-3.5 h-3.5 fill-white" />
               <span>Ask Copilot</span>
             </button>
           </div>
@@ -298,37 +295,37 @@ export const AssetExplorerView: React.FC = () => {
 
         {/* Visual Capital Flow & Return Diagram */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-widest text-cyan-400 uppercase">
+          <h3 className="text-xs font-bold font-mono tracking-widest text-purple-600 dark:text-purple-400 uppercase">
             VISUAL CAPITAL & RETURN MECHANISM
           </h3>
-          <div className="p-6 rounded-xl bg-gradient-to-r from-[#090d16] via-[#121829] to-[#090d16] border border-cyan-500/20">
+          <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-purple-500/20">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-center">
-              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-center space-y-1">
-                <span className="text-[10px] text-cyan-400 font-mono">STEP 1</span>
-                <p className="text-xs font-bold text-white">{selected.diagram.step1}</p>
+              <div className="p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-zinc-200 dark:border-white/10 text-center space-y-1 shadow-sm">
+                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-mono font-bold">STEP 1</span>
+                <p className="text-xs font-bold text-zinc-900 dark:text-white">{selected.diagram.step1}</p>
               </div>
 
-              <div className="hidden sm:flex justify-center text-cyan-400">
+              <div className="hidden sm:flex justify-center text-purple-500">
                 <ChevronRight className="w-5 h-5" />
               </div>
 
-              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-center space-y-1">
-                <span className="text-[10px] text-purple-400 font-mono">STEP 2</span>
-                <p className="text-xs font-bold text-white">{selected.diagram.step2}</p>
+              <div className="p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-zinc-200 dark:border-white/10 text-center space-y-1 shadow-sm">
+                <span className="text-[10px] text-violet-600 dark:text-violet-400 font-mono font-bold">STEP 2</span>
+                <p className="text-xs font-bold text-zinc-900 dark:text-white">{selected.diagram.step2}</p>
               </div>
 
-              <div className="hidden sm:flex justify-center text-cyan-400">
+              <div className="hidden sm:flex justify-center text-purple-500">
                 <ChevronRight className="w-5 h-5" />
               </div>
 
-              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/10 text-center space-y-1 sm:col-span-2 lg:col-span-1">
-                <span className="text-[10px] text-amber-400 font-mono">STEP 3</span>
-                <p className="text-xs font-bold text-white">{selected.diagram.step3}</p>
+              <div className="p-4 rounded-xl bg-white dark:bg-white/[0.03] border border-zinc-200 dark:border-white/10 text-center space-y-1 shadow-sm sm:col-span-2 lg:col-span-1">
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">STEP 3</span>
+                <p className="text-xs font-bold text-zinc-900 dark:text-white">{selected.diagram.step3}</p>
               </div>
 
-              <div className="p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/40 text-center space-y-1 sm:col-span-2 lg:col-span-1">
-                <span className="text-[10px] text-emerald-400 font-mono font-bold">CASH FLOW DISTRIBUTION</span>
-                <p className="text-xs font-extrabold text-emerald-300">{selected.diagram.distribution}</p>
+              <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-600/40 text-center space-y-1 sm:col-span-2 lg:col-span-1">
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">DISTRIBUTION ENGINE</span>
+                <p className="text-xs font-extrabold text-purple-900 dark:text-purple-200">{selected.diagram.distribution}</p>
               </div>
             </div>
           </div>
@@ -336,36 +333,34 @@ export const AssetExplorerView: React.FC = () => {
 
         {/* 2-Column: What is it & How it works */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* What is it? */}
-          <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-cyan-400" />
+          <div className="p-5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06] space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-purple-500" />
               What is it?
             </h4>
-            <p className="text-sm text-slate-200 leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
               {selected.whatIsIt}
             </p>
 
             <div className="pt-2 grid grid-cols-2 gap-2 text-xs">
               {selected.characteristics.map((c, i) => (
-                <div key={i} className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
-                  <span className="text-[10px] text-slate-500 block">{c.label}</span>
-                  <span className="font-semibold text-white mt-0.5 block">{c.value}</span>
+                <div key={i} className="p-2 rounded-lg bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5">
+                  <span className="text-[10px] text-zinc-400 block">{c.label}</span>
+                  <span className="font-semibold text-zinc-900 dark:text-white mt-0.5 block">{c.value}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* How does it work? */}
-          <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Workflow className="w-4 h-4 text-purple-400" />
+          <div className="p-5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06] space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Workflow className="w-4 h-4 text-violet-500" />
               How Does It Work?
             </h4>
             <div className="space-y-2.5">
               {selected.howItWorks.map((step, i) => (
-                <div key={i} className="flex items-start gap-2.5 text-xs text-slate-300 leading-relaxed">
-                  <div className="w-5 h-5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-mono font-bold">
+                <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                  <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-mono font-bold">
                     {i + 1}
                   </div>
                   <span>{step}</span>
@@ -375,69 +370,66 @@ export const AssetExplorerView: React.FC = () => {
           </div>
         </div>
 
-        {/* Returns Engine Breakdown (Capital gains vs Regular income) */}
-        <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Coins className="w-4 h-4 text-amber-400" />
+        {/* Returns Engine Breakdown */}
+        <div className="p-5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06] space-y-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+            <Coins className="w-4 h-4 text-amber-500" />
             How Returns & Income Arise
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-1">
-              <span className="text-[11px] text-slate-400">Capital Appreciation</span>
-              <p className="text-xs font-semibold text-white mt-1">{selected.returnsEngine.capitalGains}</p>
+            <div className="p-4 rounded-xl bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/10 space-y-1">
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Capital Appreciation</span>
+              <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 mt-1">{selected.returnsEngine.capitalGains}</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 space-y-1">
-              <span className="text-[11px] text-slate-400">Regular Income Distribution</span>
-              <p className="text-xs font-semibold text-white mt-1">{selected.returnsEngine.regularIncome}</p>
+            <div className="p-4 rounded-xl bg-white dark:bg-white/[0.02] border border-zinc-200 dark:border-white/10 space-y-1">
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Regular Income Distribution</span>
+              <p className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 mt-1">{selected.returnsEngine.regularIncome}</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-1">
-              <span className="text-[11px] text-amber-300">Typical Indicative Yield</span>
-              <p className="text-lg font-black text-amber-400 mt-1">{selected.returnsEngine.typicalYield}</p>
+            <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-300 dark:border-purple-500/30 space-y-1">
+              <span className="text-[11px] text-purple-700 dark:text-purple-300">Typical Indicative Yield</span>
+              <p className="text-lg font-black text-purple-700 dark:text-purple-300 mt-1">{selected.returnsEngine.typicalYield}</p>
             </div>
           </div>
         </div>
 
         {/* Liquidity, Risks, and Typical Use Cases */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Liquidity */}
-          <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-blue-400" />
+          <div className="p-5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06] space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-blue-500" />
               Liquidity
             </h4>
-            <div className="font-semibold text-xs text-white">{selected.liquidity.level}</div>
-            <p className="text-xs text-slate-400 leading-relaxed">{selected.liquidity.description}</p>
+            <div className="font-semibold text-xs text-zinc-900 dark:text-white">{selected.liquidity.level}</div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">{selected.liquidity.description}</p>
           </div>
 
-          {/* Risks */}
-          <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-rose-400" />
+          <div className="p-5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06] space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-rose-500" />
               Risk Considerations
             </h4>
-            <ul className="space-y-1.5 text-xs text-slate-400">
+            <ul className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
               {selected.risks.map((r, i) => (
                 <li key={i} className="flex items-start gap-1.5">
-                  <span className="text-rose-400">•</span>
+                  <span className="text-rose-500">•</span>
                   <span>{r}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Use Cases */}
-          <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Briefcase className="w-4 h-4 text-emerald-400" />
+          <div className="p-5 rounded-xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/[0.06] space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <Briefcase className="w-4 h-4 text-emerald-500" />
               Typical Use Cases
             </h4>
-            <ul className="space-y-1.5 text-xs text-slate-400">
+            <ul className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
               {selected.useCases.map((u, i) => (
                 <li key={i} className="flex items-start gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                   <span>{u}</span>
                 </li>
               ))}

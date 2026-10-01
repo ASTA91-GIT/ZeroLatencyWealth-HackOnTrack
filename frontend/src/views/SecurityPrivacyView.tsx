@@ -8,7 +8,8 @@ import {
   Database,
   CheckCircle2,
   Clock,
-  AlertTriangle
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
 interface SecurityFeature {
@@ -75,56 +76,69 @@ export const SecurityPrivacyView: React.FC = () => {
   return (
     <div className="space-y-6 pb-16">
       {/* Header */}
-      <div className="p-6 rounded-2xl bg-[#0c101d] border border-white/[0.08] shadow-xl">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-cyan-400" />
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+      <div className="fintech-card p-6 rounded-2xl">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+            <ShieldCheck className="w-4 h-4 text-purple-400" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black text-theme tracking-tight">
             Security & Privacy Architecture
           </h1>
         </div>
-        <p className="text-xs text-slate-400 mt-1 max-w-3xl">
-          Fintech-grade data protection, ethical AI boundaries, and our clear distinction between implemented hackathon safeguards and conceptual production roadmap.
+        <p className="text-xs text-muted-theme mt-1.5 max-w-3xl">
+          Fintech-grade data protection, ethical AI boundaries, and a transparent distinction between active hackathon safeguards and conceptual production roadmap.
         </p>
       </div>
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-[#0c101d] border border-white/[0.08] space-y-2">
-          <Lock className="w-5 h-5 text-cyan-400" />
-          <h3 className="text-sm font-bold text-white">No Broker Credentials Needed</h3>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            The platform is built on data minimization principles. We ingest read-only statements and simulated pipes without asking for sensitive trading PINs.
+        <div className="fintech-card p-5 rounded-2xl space-y-2.5 hover:border-purple-500/30 transition-all">
+          <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+            <Lock className="w-4 h-4 text-purple-400" />
+          </div>
+          <h3 className="text-sm font-bold text-theme">Zero Broker Credentials Required</h3>
+          <p className="text-xs text-muted-theme leading-relaxed">
+            The platform is built on data minimization principles. We ingest read-only statements and simulated pipes without asking for sensitive trading PINs or depository master keys.
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#0c101d] border border-white/[0.08] space-y-2">
-          <EyeOff className="w-5 h-5 text-purple-400" />
-          <h3 className="text-sm font-bold text-white">Ethical AI Neutrality</h3>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            ZeroLatency Copilot is designed exclusively as an awareness engine. It will never recommend buying or selling any security or promise yields.
+        <div className="fintech-card p-5 rounded-2xl space-y-2.5 hover:border-purple-500/30 transition-all">
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+            <EyeOff className="w-4 h-4 text-indigo-400" />
+          </div>
+          <h3 className="text-sm font-bold text-theme">Ethical AI Neutrality</h3>
+          <p className="text-xs text-muted-theme leading-relaxed">
+            ZeroLatency Copilot is designed exclusively as an awareness engine. It will never recommend buying or selling any security or promise guaranteed yields.
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#0c101d] border border-white/[0.08] space-y-2">
-          <Key className="w-5 h-5 text-emerald-400" />
-          <h3 className="text-sm font-bold text-white">Local Sandbox Isolation</h3>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            All demo portfolio state is isolated in a lightweight SQLite database with instantaneous reset controls for complete reproducibility.
+        <div className="fintech-card p-5 rounded-2xl space-y-2.5 hover:border-purple-500/30 transition-all">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <Key className="w-4 h-4 text-emerald-400" />
+          </div>
+          <h3 className="text-sm font-bold text-theme">Local Sandbox Sovereignty</h3>
+          <p className="text-xs text-muted-theme leading-relaxed">
+            All demo portfolio state is isolated in a lightweight SQLite database with instantaneous reset controls for complete demo reproducibility.
           </p>
         </div>
       </div>
 
       {/* Security Matrix Table: IMPLEMENTED vs CONCEPTUAL */}
-      <div className="p-6 rounded-2xl bg-[#0c101d] border border-white/[0.08] space-y-4 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h3 className="text-base font-bold text-white tracking-wide">
-            Implementation Status & Production Roadmap Matrix
-          </h3>
+      <div className="fintech-card p-6 rounded-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-theme pb-4">
+          <div>
+            <h3 className="text-base font-bold text-theme tracking-wide">
+              Implementation Status & Production Roadmap Matrix
+            </h3>
+            <p className="text-xs text-muted-theme mt-0.5">
+              Clear verification criteria for hackathon evaluation and compliance boundaries
+            </p>
+          </div>
           <div className="flex items-center gap-3 text-xs font-mono">
-            <span className="flex items-center gap-1 text-emerald-400">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <CheckCircle2 className="w-3.5 h-3.5" /> IMPLEMENTED (4)
             </span>
-            <span className="flex items-center gap-1 text-cyan-400">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20">
               <Clock className="w-3.5 h-3.5" /> CONCEPTUAL (3)
             </span>
           </div>
@@ -133,36 +147,36 @@ export const SecurityPrivacyView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-white/10 text-slate-400 font-mono">
+              <tr className="border-b border-theme text-muted-theme font-mono">
                 <th className="py-3 px-3">Security Feature</th>
                 <th className="py-3 px-3">Category</th>
                 <th className="py-3 px-3 text-center">Status</th>
                 <th className="py-3 px-4">Architecture & Technical Implementation</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-slate-300">
+            <tbody className="divide-y divide-theme text-muted-theme">
               {SECURITY_MATRIX.map((item, idx) => {
                 const isImpl = item.status === 'IMPLEMENTED';
                 return (
-                  <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3.5 px-3 font-semibold text-white">
+                  <tr key={idx} className="hover:bg-purple-500/5 transition-colors">
+                    <td className="py-3.5 px-3 font-semibold text-theme">
                       {item.title}
                     </td>
-                    <td className="py-3.5 px-3 font-mono text-slate-400">
+                    <td className="py-3.5 px-3 font-mono text-muted-theme">
                       {item.category}
                     </td>
                     <td className="py-3.5 px-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border font-mono ${
+                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border font-mono ${
                         isImpl
-                          ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
-                          : 'bg-cyan-950/80 text-cyan-300 border-cyan-500/40'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : 'bg-purple-500/10 text-purple-400 border-purple-500/30'
                       }`}>
                         {item.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400 space-y-1">
-                      <p className="text-slate-300">{item.description}</p>
-                      <p className="text-[11px] font-mono text-cyan-400/80">{item.techDetails}</p>
+                    <td className="py-3.5 px-4 space-y-1">
+                      <p className="text-theme">{item.description}</p>
+                      <p className="text-[11px] font-mono text-purple-400">{item.techDetails}</p>
                     </td>
                   </tr>
                 );

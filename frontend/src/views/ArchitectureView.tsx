@@ -41,18 +41,19 @@ const ARCH_NODES: ArchNode[] = [
     id: 'frontend',
     name: '2. React 19 Frontend',
     category: 'Presentation Layer',
-    shortDesc: 'Vite + React 19 + TypeScript + Tailwind CSS terminal with Recharts data visualizers.',
-    techStack: 'React 19, TypeScript, Tailwind CSS v4, Lucide React, Recharts',
+    shortDesc: 'Vite + React 19 + TypeScript + Tailwind CSS terminal with Recharts data visualizers and Three.js 3D lattice.',
+    techStack: 'React 19, TypeScript, Three.js, Tailwind CSS v4, Lucide React, Recharts',
     responsibilities: [
       'Stateless view routing across Dashboard, Holdings, Explorer, Insights, Goals, Academy',
       'Real-time donut & area chart rendering with fractional currency precision',
       'Optimistic state updates with slide-out Copilot drawer',
-      'Accessible dark-first fintech terminal aesthetics with electric cyan accents'
+      'Accessible dark-first fintech terminal aesthetics with electric purple accents'
     ],
     samplePayload: JSON.stringify({
       view: 'portfolio',
       filters: { asset_type: 'REIT', source: 'Broker A' },
-      active_currency: 'INR'
+      active_currency: 'INR',
+      theme: 'dark'
     }, null, 2)
   },
   {
@@ -173,21 +174,23 @@ export const ArchitectureView: React.FC = () => {
   return (
     <div className="space-y-6 pb-16">
       {/* Header */}
-      <div className="p-6 rounded-2xl bg-[#0c101d] border border-white/[0.08] shadow-xl">
-        <div className="flex items-center gap-2">
-          <Cpu className="w-5 h-5 text-cyan-400" />
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+      <div className="fintech-card p-6 rounded-2xl">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+            <Cpu className="w-4 h-4 text-purple-400" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-black text-theme tracking-tight">
             System Architecture & Pipeline Flow
           </h1>
         </div>
-        <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+        <p className="text-xs text-muted-theme mt-1.5 max-w-3xl">
           Interactive full-stack architecture diagram illustrating the complete journey: from retail broker aggregation and SEBI asset classification to analytics and AI-powered awareness.
         </p>
       </div>
 
       {/* Interactive Horizontal Pipeline Visualizer */}
-      <div className="p-6 rounded-2xl bg-[#0c101d] border border-white/[0.08] space-y-4">
-        <h3 className="text-xs font-bold font-mono tracking-widest text-cyan-400 uppercase">
+      <div className="fintech-card p-6 rounded-2xl space-y-4">
+        <h3 className="text-xs font-bold font-mono tracking-widest text-purple-400 uppercase">
           CLICK ANY PIPELINE NODE TO INSPECT SUBSYSTEM DETAILS
         </h3>
 
@@ -198,13 +201,13 @@ export const ArchitectureView: React.FC = () => {
               <button
                 key={node.id}
                 onClick={() => setSelectedNode(node)}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-[0_0_20px_rgba(0,242,254,0.25)]'
-                    : 'bg-white/[0.02] border-white/10 hover:border-white/20 text-slate-300'
+                    ? 'bg-purple-500/15 border-purple-400 text-theme shadow-[0_0_20px_rgba(168,85,247,0.25)]'
+                    : 'bg-surface-2 border-theme hover:border-purple-500/30 text-muted-theme hover:text-theme'
                 }`}
               >
-                <span className="text-[10px] font-mono text-cyan-400 block">{node.category}</span>
+                <span className="text-[10px] font-mono text-purple-400 block font-semibold">{node.category}</span>
                 <span className="text-xs font-bold block mt-1 truncate">{node.name}</span>
               </button>
             );
@@ -213,36 +216,36 @@ export const ArchitectureView: React.FC = () => {
       </div>
 
       {/* Selected Node Technical Details Drawer / Card */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-[#0c101d] border border-cyan-500/30 space-y-6 shadow-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="fintech-card p-6 sm:p-8 rounded-2xl space-y-6 border-purple-500/30 shadow-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-theme">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-bold uppercase">
+              <span className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold uppercase">
                 {selectedNode.category}
               </span>
-              <span className="text-xs font-mono text-slate-400 font-semibold">SUBSYSTEM DEEP-DIVE</span>
+              <span className="text-xs font-mono text-muted-theme font-semibold">SUBSYSTEM DEEP-DIVE</span>
             </div>
-            <h2 className="text-2xl font-black text-white mt-1 tracking-tight">
+            <h2 className="text-2xl font-black text-theme mt-2 tracking-tight">
               {selectedNode.name}
             </h2>
-            <p className="text-xs text-slate-400 mt-1">{selectedNode.shortDesc}</p>
+            <p className="text-xs text-muted-theme mt-1">{selectedNode.shortDesc}</p>
           </div>
 
-          <div className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-mono text-cyan-300">
+          <div className="px-4 py-2 rounded-xl bg-purple-500/5 border border-purple-500/20 text-xs font-mono text-purple-400 font-semibold self-start sm:self-auto">
             Stack: {selectedNode.techStack}
           </div>
         </div>
 
         {/* Responsibilities */}
         <div className="space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-theme flex items-center gap-2 font-mono">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             Core Responsibilities & Capabilities
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {selectedNode.responsibilities.map((r, i) => (
-              <div key={i} className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-slate-300 leading-relaxed flex items-start gap-2">
-                <span className="text-cyan-400 font-bold mt-0.5">•</span>
+              <div key={i} className="p-3.5 rounded-xl bg-surface-2 border border-theme text-xs text-theme leading-relaxed flex items-start gap-2.5">
+                <span className="text-purple-400 font-bold mt-0.5">•</span>
                 <span>{r}</span>
               </div>
             ))}
@@ -252,11 +255,11 @@ export const ArchitectureView: React.FC = () => {
         {/* Sample JSON / Technical Payload */}
         {selectedNode.samplePayload && (
           <div className="space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 font-mono">
-              <Terminal className="w-4 h-4 text-cyan-400" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-theme flex items-center gap-2 font-mono">
+              <Terminal className="w-4 h-4 text-purple-400" />
               Runtime Diagnostic Payload
             </h4>
-            <div className="p-4 rounded-xl bg-[#07090e] border border-white/10 text-xs font-mono text-cyan-300 overflow-x-auto">
+            <div className="p-4 rounded-xl bg-[#09090b] border border-white/10 text-xs font-mono text-purple-300 overflow-x-auto shadow-inner">
               <pre>{selectedNode.samplePayload}</pre>
             </div>
           </div>

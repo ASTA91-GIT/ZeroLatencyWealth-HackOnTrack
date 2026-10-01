@@ -18,6 +18,8 @@ export type ViewType =
   | 'login'
   | 'register';
 
+export type ThemeType = 'dark' | 'light';
+
 interface ToastInfo {
   id: string;
   message: string;
@@ -43,6 +45,9 @@ interface AppContextType {
   loginAsDemoUser: () => Promise<void>;
   logout: () => void;
   openAssetModal: (asset: HoldingModel) => void;
+  theme: ThemeType;
+  toggleTheme: () => void;
+  setTheme: (theme: ThemeType) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -56,6 +61,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [toasts, setToasts] = useState<ToastInfo[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<HoldingModel | null>(null);
   const [isCopilotDrawerOpen, setIsCopilotDrawerOpen] = useState<boolean>(false);
+
+  // Theme Management
+  const [theme, setThemeState] = useState<ThemeType>(() => {
+    const saved = localStorage.getItem('zl_theme') as ThemeType;
+    if (saved === 'dark' || saved === 'light') return saved;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+      ? 'light'
+      : 'dark';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('zl_theme', theme);
+  }, [theme]);
+
+  const setTheme = (newTheme: ThemeType) => {
+    setThemeState(newTheme);
+  };
+
+  const toggleTheme = () => {
+    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   const showToast = (message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -152,6 +184,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loginAsDemoUser,
         logout,
         openAssetModal,
+        theme,
+        toggleTheme,
+        setTheme,
       }}
     >
       {children}

@@ -1,93 +1,155 @@
 @import "tailwindcss";
 
 @layer base {
+  /* Light Mode Design Tokens */
   :root {
-    --bg-primary: #07090e;
-    --bg-secondary: #0d121f;
-    --bg-surface: #121829;
-    --bg-surface-elevated: #162035;
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-bright: rgba(0, 242, 254, 0.3);
-    --accent-cyan: #00f2fe;
-    --accent-blue: #4facfe;
-    --accent-emerald: #00e599;
-    --accent-purple: #7928ca;
+    --bg-main: #f8f7fc;
+    --bg-surface: #ffffff;
+    --bg-surface-elevated: #f5f3ff;
+    --bg-surface-subtle: #ede9fe;
+    
+    --border-subtle: #e9e5f5;
+    --border-medium: #d8d2ea;
+    --border-accent: rgba(124, 58, 237, 0.35);
+    
+    --text-primary: #18181b;
+    --text-secondary: #52525b;
+    --text-muted: #71717a;
+    
+    --primary: #7c3aed;
+    --primary-bright: #9333ea;
+    --primary-dark: #6d28d9;
+    --accent-purple: #a855f7;
+    --accent-indigo: #6366f1;
+    --accent-cyan: #06b6d4;
+    --accent-emerald: #10b981;
     --accent-amber: #f59e0b;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --accent-rose: #f43f5e;
+    
+    --card-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+    --card-shadow-hover: 0 10px 30px -4px rgba(124, 58, 237, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.05);
+    
+    --chart-grid: rgba(100, 116, 139, 0.12);
+  }
+
+  /* Dark Mode Design Tokens */
+  .dark {
+    --bg-main: #09090d;
+    --bg-surface: #121118;
+    --bg-surface-elevated: #1a1924;
+    --bg-surface-subtle: #242232;
+    
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.15);
+    --border-accent: rgba(168, 85, 247, 0.35);
+    
+    --text-primary: #faf5ff;
+    --text-secondary: #d4d4d8;
+    --text-muted: #a1a1aa;
+    
+    --primary: #8b5cf6;
+    --primary-bright: #a855f7;
+    --primary-dark: #7c3aed;
+    --accent-purple: #c084fc;
+    --accent-indigo: #818cf8;
+    --accent-cyan: #22d3ee;
+    --accent-emerald: #34d399;
+    --accent-amber: #fbbf24;
+    --accent-rose: #fb7185;
+    
+    --card-shadow: 0 4px 25px -2px rgba(0, 0, 0, 0.5), 0 0 15px 0 rgba(139, 92, 246, 0.05);
+    --card-shadow-hover: 0 12px 35px -4px rgba(0, 0, 0, 0.7), 0 0 25px 0 rgba(168, 85, 247, 0.15);
+    
+    --chart-grid: rgba(255, 255, 255, 0.06);
   }
 
   body {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-main);
     color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Outfit", sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.012em;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
-/* Custom terminal & glass styling */
-.terminal-card {
-  background: linear-gradient(135deg, rgba(13, 18, 31, 0.75) 0%, rgba(18, 24, 41, 0.55) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Card utilities */
+.fintech-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fintech-card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.fintech-card-elevated {
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glass panel */
+.fintech-glass {
+  background: rgba(18, 17, 24, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.terminal-card:hover {
-  border-color: rgba(0, 242, 254, 0.25);
-  box-shadow: 0 8px 30px rgba(0, 242, 254, 0.05);
+:not(.dark) .fintech-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(124, 58, 237, 0.12);
 }
 
-.terminal-glow {
-  box-shadow: 0 0 25px rgba(0, 242, 254, 0.15);
+/* Purple Glows */
+.purple-glow-sm {
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
 }
 
-.glow-pill {
-  box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+.purple-glow-md {
+  box-shadow: 0 0 28px rgba(168, 85, 247, 0.35);
 }
 
-/* Custom scrollbar */
+.purple-glow-text {
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+}
+
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: var(--bg-main);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--border-medium);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 242, 254, 0.4);
+  background: var(--primary);
 }
 
-/* Shimmer animation */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.animate-shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.animate-shimmer::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 242, 254, 0.12), transparent);
-  animation: shimmer 2.2s infinite;
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
