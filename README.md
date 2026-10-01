@@ -9,6 +9,17 @@
 
 ---
 
+## 📚 Engineering Documentation
+
+Comprehensive technical documentation matching the live codebase is available in the repository root:
+
+- [Technical Requirements Document (TRD.md)](./TRD.md) — 32 comprehensive engineering sections detailing architecture, models, APIs, and calculations.
+- [Application Flow (APP_FLOW.md)](./APP_FLOW.md) — End-to-end navigational flows, AI Copilot decision trees, and multi-broker ingestion pipelines.
+- [Implementation Plan (IMPLEMENTATION_PLAN.md)](./IMPLEMENTATION_PLAN.md) — 14-phase roadmap tracking completed modules and redesign milestones.
+- [Testing & Verification (TESTING.md)](./TESTING.md) — Complete test reports across all 16 FastAPI endpoints, frontend builds, theme switches, and canonical benchmark math.
+
+---
+
 ## ⚠️ Mandatory Hackathon Financial Disclaimer
 > **"All financial data displayed in this hackathon prototype is fictional/demo data and is not financial advice."**  
 > ZeroLatency Wealth is an educational and portfolio consolidation prototype developed for **Hack on Track Round 1**. It does not connect to real brokerage accounts or execute actual financial transactions, nor does it provide personalized investment advice or buy/sell recommendations.
@@ -48,18 +59,28 @@ When evaluating or clicking **"Continue with Demo"**, ZeroLatency Wealth initial
 
 ---
 
+## 🎨 Design System & Visual Identity (Purple + Neon Fintech)
+
+The user interface features a distinctive **Purple + Neon Fintech** design language:
+- **Color Palette:** Deep Violet (`#7C3AED`), Electric Neon Purple (`#A855F7`), Midnight Violet (`#5B21B6`), and Fintech Indigo (`#6366F1`).
+- **Complete Dual Themes:** Seamless Dark Mode (`#09090B` background, `#111113` surface) and Light Mode (`#FAF9FF` background, `#FFFFFF` cards) with smooth CSS transitions and `localStorage` persistence.
+- **3D WebGL Financial Hero:** Interactive Three.js canvas featuring 70+ glowing nodes connected with distance-based lattice lines, mouse parallax dynamics, and `prefers-reduced-motion` detection.
+- **Adaptive Visual Analytics:** Recharts Donut Allocation and 12-month trailing Area curves that dynamically adapt grid lines and tooltips to the active theme.
+
+---
+
 ## 🛠️ Tech Stack
 
 ### Frontend
 - **Framework:** React 19 + TypeScript
 - **Tooling:** Vite 8 (Ultra-fast build & HMR)
-- **Styling:** Tailwind CSS v4 (Custom terminal dark theme with electric cyan accents)
-- **Animations:** Framer Motion & CSS keyframe glow pulses
-- **Data Visualizations:** Recharts (Interactive Donut & Performance Area Charts)
+- **Styling:** Vanilla CSS design tokens + Tailwind CSS v4
+- **3D Visuals:** Three.js (WebGL financial network lattice)
+- **Data Visualizations:** Recharts (Theme-adaptive Donut & Performance Area Charts)
 - **Icons:** Lucide React
 
 ### Backend
-- **Language & Framework:** Python 3.14 + FastAPI 0.141
+- **Language & Framework:** Python 3.10+ (FastAPI 0.141)
 - **Server:** Uvicorn ASGI
 - **Data Validation:** Pydantic v2
 - **Database:** SQLite local database (`zerolatency.db`) with relational integrity
@@ -73,9 +94,9 @@ When evaluating or clicking **"Continue with Demo"**, ZeroLatency Wealth initial
                             RETAIL INVESTOR / JUDGE
                                        ↓
                         REACT 19 FRONTEND TERMINAL
-                           (Vite + Tailwind CSS)
+                 (Vite + Tailwind CSS v4 + Three.js 3D)
                                        ↓
-                          FASTAPI GATEWAY & CORS
+                           FASTAPI GATEWAY & CORS
                                        ↓
          ┌─────────────────────────────┼─────────────────────────────┐
          ↓                             ↓                             ↓
@@ -84,20 +105,11 @@ AUTHENTICATION & SESSION        PORTFOLIO INGESTION          ANALYTICS & YIELD
          ↓                             ↓                             ↓
 DATA NORMALIZATION & SEBI CLASSIFICATION (Pillars: Equity, Bond, REIT, InvIT)
                                        ↓
-                        ZERO LATENCY COPILOT
-                 (Deterministic Awareness Engine)
+                         ZERO LATENCY COPILOT
+                   (Deterministic Awareness Engine)
                                        ↓
-                       SQLITE LOCAL DATABASE
+                        SQLITE LOCAL DATABASE
 ```
-
-### Full-Stack Pipeline Flow:
-1. **User Interaction:** Client triggers operations on the dark-mode terminal.
-2. **FastAPI Endpoints:** Authenticated requests routed to asynchronous service handlers.
-3. **Data Normalization:** Ingested holdings from diverse brokers are standardized to canonical schemas.
-4. **Asset Classification:** Categorizes securities into SEBI asset classes with statutory rules.
-5. **Analytics Engine:** Calculates portfolio weights, weighted yields, and concentration metrics.
-6. **Copilot Layer:** Synthesizes portfolio state to answer natural language questions without buy/sell calls.
-7. **Database:** SQLite relational storage with atomic demo reset support.
 
 ---
 
@@ -119,19 +131,20 @@ ZeroLatencyWealth-HackOnTrack/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── FinancialNetwork3D.tsx # Interactive Three.js WebGL hero animation
 │   │   │   ├── Logo.tsx            # Futuristic ZL monogram brand mark
-│   │   │   ├── Navbar.tsx          # Top bar with DEMO MODE badge & navigation
+│   │   │   ├── Navbar.tsx          # Top bar with DEMO MODE badge, theme switch, & nav
 │   │   │   ├── AssetDetailModal.tsx# Multi-Asset deep dive inspection modal
 │   │   │   ├── CopilotDrawer.tsx   # Persistent slide-out AI assistant panel
 │   │   │   └── ToastContainer.tsx  # User feedback alerts
 │   │   ├── context/
-│   │   │   └── AppContext.tsx      # Global state, portfolio sync, and demo reset
+│   │   │   └── AppContext.tsx      # Global state, theme persistence, and portfolio sync
 │   │   ├── services/
 │   │   │   └── api.ts              # Typed API client for FastAPI backend
 │   │   ├── types/
 │   │   │   └── index.ts            # TypeScript interfaces
 │   │   ├── views/
-│   │   │   ├── LandingPage.tsx     # Hero, fragmentation problem, and visual pipeline
+│   │   │   ├── LandingPage.tsx     # Hero with 3D canvas, problem, and visual pipeline
 │   │   │   ├── DashboardView.tsx   # Financial command center, Donut & Area charts
 │   │   │   ├── UnifiedPortfolioView.tsx # Filterable multi-asset holdings table
 │   │   │   ├── AssetExplorerView.tsx    # Beginner-friendly asset class guides & diagrams
@@ -141,14 +154,18 @@ ZeroLatencyWealth-HackOnTrack/
 │   │   │   ├── PortfolioImportView.tsx  # Broker aggregation simulator & real CSV upload
 │   │   │   ├── SecurityPrivacyView.tsx  # IMPLEMENTED vs CONCEPTUAL security matrix
 │   │   │   ├── ArchitectureView.tsx     # Interactive 10-node full-stack architecture
-│   │   │   ├── SettingsView.tsx    # Profile, currency toggle, and JSON exporter
+│   │   │   ├── SettingsView.tsx    # Profile, currency toggle, theme mode, and exporter
 │   │   │   └── AuthView.tsx        # 1-Click Demo login & credential forms
 │   │   ├── App.tsx                 # Root application layout & view switcher
 │   │   ├── main.tsx                # React entrypoint
-│   │   └── index.css               # Design system & dark terminal styling tokens
+│   │   └── index.css               # Design system & purple fintech styling tokens
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── vite.config.ts              # Tailwind CSS plugin & backend API proxy
+├── TRD.md                          # Technical Requirements Document
+├── APP_FLOW.md                     # Application Flow Document
+├── IMPLEMENTATION_PLAN.md          # 14-Phase Implementation Plan
+├── TESTING.md                      # Testing & Verification Report
 ├── .env.example                    # Template environment variables
 ├── .gitignore                      # Git exclusion rules
 └── README.md                       # Comprehensive project documentation
@@ -179,16 +196,12 @@ cp .env.example .env
 ### 4. Backend Setup & Startup
 Install Python dependencies and start the FastAPI ASGI server:
 ```bash
-# Optional: create a virtual environment
-# python -m venv venv
-# venv\Scripts\activate  (Windows) or source venv/bin/activate (macOS/Linux)
-
 pip install fastapi uvicorn pydantic python-multipart httpx
 
 # Start the FastAPI backend
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
-- Backend will be live at: `http://127.0.0.1:8000`
+- Backend live at: `http://127.0.0.1:8000`
 - Swagger OpenAPI documentation: `http://127.0.0.1:8000/docs`
 
 ### 5. Frontend Setup & Startup
@@ -198,7 +211,7 @@ cd frontend
 npm install
 npm run dev
 ```
-- Frontend will be live at: `http://127.0.0.1:5173`
+- Frontend live at: `http://127.0.0.1:5173`
 
 ---
 
@@ -207,8 +220,9 @@ npm run dev
 1. Open `http://127.0.0.1:5173` in your browser.
 2. Click **"Explore Demo"** on the hero banner, or navigate to Sign In and select **"Continue with Demo Mode"**.
 3. The platform will automatically load the canonical benchmark portfolio (**₹8,42,500**).
-4. Notice the persistent **`DEMO MODE`** pulsating badge in the top navigation.
-5. You can reset modified or newly imported holdings at any time by clicking the **"Reset Demo"** button.
+4. Notice the persistent **`DEMO MODE`** glowing badge in the top navigation.
+5. Toggle between **Dark Mode** and **Light Mode** using the sun/moon icon.
+6. You can reset modified or newly imported holdings at any time by clicking the **"Reset Demo"** button.
 
 ---
 
@@ -230,20 +244,6 @@ npm run dev
 | `POST` | `/api/import/demo` | Simulate automated ingestion from Broker A, Broker B, or Depository |
 | `POST` | `/api/import/csv` | Ingest and parse user-uploaded CSV statement |
 | `POST` | `/api/copilot/chat` | Educational ZeroLatency Copilot query with portfolio context |
-
----
-
-## 📸 Application Views & UI Highlights
-
-- **Hero Landing Page:** Visualizes the retail fragmentation dilemma and features an animated data normalization pipeline.
-- **Financial Command Center:** Real-time KPI cards, interactive Recharts allocation donut, and 12-month performance growth trajectory.
-- **Unified Holdings Table:** Multi-asset classification with interactive modals showing contractual lease yields and government coupon backing.
-- **Asset Explorer:** Comprehensive guides explaining return engines, liquidity, and risk for REITs, InvITs, Bonds, and Equities.
-- **ZeroLatency Copilot:** Slide-out right panel with multi-asset knowledge and educational disclaimers.
-- **Portfolio Ingestion Simulator:** Visual 5-step status pipeline (`CONNECTING` ➔ `FETCHING` ➔ `NORMALIZING` ➔ `CLASSIFYING` ➔ `READY`) and real CSV parser with downloadable template.
-- **Allocation Sandbox:** Interactive sliders to simulate changes in portfolio cash flow yields based on asset weights.
-- **System Architecture:** Interactive 10-node visualization of the full-stack ingestion and analytics pipeline.
-- **Security Matrix:** Explicit transparency distinguishing **IMPLEMENTED** hackathon safeguards from **CONCEPTUAL** production roadmap items.
 
 ---
 
